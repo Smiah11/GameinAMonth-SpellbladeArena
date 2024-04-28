@@ -59,10 +59,32 @@ AGameInAMonthCharacter::AGameInAMonthCharacter()
 
 
 	// Set the default values for the character
-	Health = MaxHealth;
-	Stamina = MaxStamina;
+	CurrentHealth = MaxHealth;
+	CurrentStamina = MaxStamina;
 	ComboCounter = 0;
 	ComboResetTime = 1.5f;
+
+
+}
+
+void AGameInAMonthCharacter::Tick(float DeltaTime)
+{
+		Super::Tick(DeltaTime);
+
+
+		if (CurrentStamina <= 0)
+		{
+
+			bCanAttack = false;
+			bCanDodge = false;
+
+		}
+		else
+		{
+			bCanAttack = true;
+		}
+
+		
 }
 
 void AGameInAMonthCharacter::BeginPlay()
@@ -78,6 +100,8 @@ void AGameInAMonthCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+
+	GetWorldTimerManager().SetTimer(RegenStaminaTimer, this, &AGameInAMonthCharacter::RegenStamina, 1.0f, true); //Regen stamina every 1 second
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -100,6 +124,11 @@ void AGameInAMonthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 		// Attacking
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::Attack); // Attack action binding
+
+
+		// Blocking
+		EnhancedInputComponent->BindAction(BlockAction, ETriggerEvent::Started, this, &AGameInAMonthCharacter::Block);
+		EnhancedInputComponent->BindAction(BlockAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::StopBlock);
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::Look);
@@ -198,11 +227,24 @@ void AGameInAMonthCharacter::ResetDodgeCooldown()
 void AGameInAMonthCharacter::HandleDamage(float Damage)
 {
 
-	Health -= Damage; // Subtract the damage from the health
-	if (Health <= 0) // Check if the health is less than or equal to 0
+	CurrentHealth -= Damage; // Subtract the damage from the health
+	if (CurrentHealth <= 0) // Check if the health is less than or equal to 0
 	{
 		HandleDeath(); // Call the death function
 	}
+}
+
+float AGameInAMonthCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	if (bIsBlocking)
+	{
+		DamageAmount*= BlockDamageReduction; // Reduce the damage by the block damage reduction
+	}
+
+
+	HandleDamage(DamageAmount); // Call the handle damage function
+
+	return DamageAmount; // Return the damage amount
 }
 
 void AGameInAMonthCharacter::HandleStamina(float StaminaCost)
@@ -210,8 +252,8 @@ void AGameInAMonthCharacter::HandleStamina(float StaminaCost)
 
 	UE_LOG(LogTemp, Warning, TEXT("Handling Stamina"))
 
-		Stamina -= StaminaCost; // Subtract the stamina cost from the stamina
-		if (Stamina <= 0) // Check if the stamina is less than or equal to 0
+		CurrentStamina -= StaminaCost; // Subtract the stamina cost from the stamina
+		if (CurrentStamina <= 0) // Check if the stamina is less than or equal to 0
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Out of Stamina"))
 		}
@@ -219,15 +261,25 @@ void AGameInAMonthCharacter::HandleStamina(float StaminaCost)
 
 void AGameInAMonthCharacter::Attack()
 {
+
+	if (!bCanAttack)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Cannot Attack"))
+		return;
+	}
+
 	float CurrentTime = GetWorld()->GetTimeSeconds(); // Get the current time
 
-	if (CurrentTime - LastAttackTime < AttackCooldown) // Check if the current time is less than the attack cooldown
+	if (CurrentTime - LastAttackTime < AttackCooldown ) // Check if the current time is less than the attack cooldown
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Attack on Cooldown"))
 		return; // Return if the attack is on cooldown
 	}
 
 	LastAttackTime = CurrentTime; // Set the last attack time to the current time
+
+	HandleStamina(5);
+
 
 	if (ComboCounter == 0)
 	{
@@ -262,6 +314,48 @@ void AGameInAMonthCharacter::ResetCombo()
 
 void AGameInAMonthCharacter::Block()
 {
+	if (CurrentStamina > 0)
+	{
+		bIsBlocking = true; // Set the flag to true
+		PlayAnimMontage(BlockAnimation); // Play the block animation
+		HandleStamina(10.f); // Subtract 10 stamina for blocking will be used for parrying
+
+		//GetWorldTimerManager().SetTimer(StaminaDrainTimer, this, &AGameInAMonthCharacter::DrainStamina, 1.f, true); // Set a timer to drain the stamina
+
+	}
+
+}
+
+void AGameInAMonthCharacter::StopBlock()
+{
+	bIsBlocking = false; // Set the flag to false;
+	StopAnimMontage(BlockAnimation); // Stop the block animation
+	GetWorldTimerManager().ClearTimer(StaminaDrainTimer); // Clear the stamina drain timer
+}
+
+void AGameInAMonthCharacter::DrainStamina()
+{
+	HandleStamina(BlockStaminaDrainRate); // Drain the stamina
+
+	if (CurrentStamina <= 0)
+	{
+		StopBlock(); // Stop the block if the stamina is less than or equal to 0
+	}
+
+}
+
+void AGameInAMonthCharacter::RegenStamina()
+{
+
+
+	CurrentStamina += 5.f; // Regen by 2
+	CurrentStamina = FMath::Clamp(CurrentStamina, 0.f, MaxStamina); // Clamp the stamina
+	UE_LOG(LogTemp, Warning, TEXT("Stamina: %f"), CurrentStamina)
+
+	if (CurrentStamina >= MaxStamina)
+	{
+		CurrentStamina = MaxStamina; // Set the stamina to the max stamina
+	}
 }
 
 void AGameInAMonthCharacter::OnSwordHit(AActor* HitActor, AActor* OtherActor)
@@ -334,6 +428,8 @@ void AGameInAMonthCharacter::HandleDeath()
 {
 	// Handle the death of the character
 	// For now, we will just reset the player
+
+	
 	Destroy();
 }
 

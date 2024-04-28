@@ -63,13 +63,13 @@ class AGameInAMonthCharacter : public ACharacter
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
-	float Health = 100.f;
+	float CurrentHealth = 100.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
 	float MaxHealth = 100.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
-	float Stamina = 100.f;
+	float CurrentStamina = 100.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
 	float MaxStamina = 100.f;
@@ -79,6 +79,9 @@ class AGameInAMonthCharacter : public ACharacter
 
 public:
 	AGameInAMonthCharacter();
+
+
+
 	
 
 protected:
@@ -103,6 +106,8 @@ protected:
 
 	void HandleDamage(float Damage); // Handle the player damage
 
+	float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override; // Take damage function
+
 	void HandleStamina(float StaminaCost); // Handle the player stamina
 
 	void Attack(); // Handle the player attack
@@ -112,6 +117,9 @@ protected:
 	void ResetCombo(); // Reset the combo counter
 
 	void Block(); // Handle the player block
+	void StopBlock(); // Stop the player block
+	void DrainStamina(); // Drain the player stamina while blocking
+	void RegenStamina(); // Regen the player stamina while not blocking or attacking
 
 
 	UFUNCTION()
@@ -131,6 +139,8 @@ protected:
 	
 	// To add mapping context
 	virtual void BeginPlay();
+
+	virtual void Tick(float DeltaTime) override;
 
 public:
 	/** Returns CameraBoom subobject **/
@@ -156,8 +166,15 @@ private:
 	float DamageMultiplier = 1.f; // Damage multiplier
 	float AttackCooldown = 0.5f; // Attack cooldown
 	float LastAttackTime = 0.f; // Last attack time
+	bool bCanAttack = true; // If the player can attack
 
 
+	//Block System
+	bool bIsBlocking = false; // If the player is blocking
+	float BlockStaminaDrainRate = 5.f; // Stamina drain rate while blocking
+	float BlockDamageReduction = 0.5f; // Damage reduction while blocking
+	FTimerHandle StaminaDrainTimer; // Timer to drain the stamina while blocking
+	FTimerHandle RegenStaminaTimer;
 
 
 
@@ -188,6 +205,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivate))
 	UAnimMontage* DodgeMontage; // DodgeMontage
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivate))
+	UAnimMontage* BlockAnimation; // Block Montage
 
 };
 
