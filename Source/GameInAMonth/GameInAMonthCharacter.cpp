@@ -84,6 +84,9 @@ void AGameInAMonthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::Move);
 
+		// Dodging
+		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::Dodge); //Dodge is a combo input
+
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::Look);
 	}
@@ -110,9 +113,24 @@ void AGameInAMonthCharacter::Move(const FInputActionValue& Value)
 		// get right vector 
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
+
+
+		// calculate the total direction
+		FVector TotalDirection = (ForwardDirection * MovementVector.Y) + (RightDirection * MovementVector.X);
+		if (!TotalDirection.IsNearlyZero()) // check if the total direction is not zero so checking if its valid
+		{
+			LastInputDirection = TotalDirection.GetSafeNormal(); // save the last input direction
+			bHasValidInputDirection = true; // set the flag to true
+		}
+
+
+
 		// add movement 
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
+
+		//Double Tap input is in the mappings using UE5 combos
+
 	}
 }
 
@@ -128,3 +146,29 @@ void AGameInAMonthCharacter::Look(const FInputActionValue& Value)
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
 }
+
+void AGameInAMonthCharacter::Dodge()
+{
+
+	if (bHasValidInputDirection && bCanDodge)
+	{
+		FVector Direction = LastInputDirection; // Get the last input direction
+		LaunchCharacter(Direction * DodgeStrength, true, true); // Launch the character in the direction of the dodge
+		bHasValidInputDirection = false; // Reset the flag
+		StartDodgeCooldown(); // Start the dodge cooldown
+	}
+
+
+}
+
+void AGameInAMonthCharacter::StartDodgeCooldown()
+{
+	bCanDodge = false; // Set the flag to false
+	GetWorldTimerManager().SetTimer(DodgeCooldown, this, &AGameInAMonthCharacter::ResetDodgeCooldown, 1.f, false); // 1 second cooldown
+}
+
+void AGameInAMonthCharacter::ResetDodgeCooldown()
+{
+		bCanDodge = true; // Set the flag to true so the player can dodge again
+}
+

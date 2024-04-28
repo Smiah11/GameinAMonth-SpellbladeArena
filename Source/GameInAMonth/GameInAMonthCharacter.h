@@ -44,6 +44,31 @@ class AGameInAMonthCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	/** Dodge Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* DodgeAction;
+
+
+	/** Dodge strength */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat System", meta = (AllowPrivateAccess = "true"))
+	float DodgeStrength = 1500.f;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
+	float Health = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
+	float MaxHealth = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
+	float Stamina = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
+	float MaxStamina = 100.f;
+
+
+
+
 public:
 	AGameInAMonthCharacter();
 	
@@ -55,6 +80,14 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	void Dodge(); // Called for dodge input
+
+	void StartDodgeCooldown(); // Start the dodge cooldown
+
+	void ResetDodgeCooldown();
+
+	
 			
 
 protected:
@@ -69,5 +102,16 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+private:
+
+	float DoubleTapWindow = 0.2f; // Time window to detect double tap
+	float LastDodgeTime = 0.f; // Last time the dodge input was pressed
+	FVector LastInputDirection = FVector::ZeroVector; // Last direction of the  input
+	bool bHasValidInputDirection = false; // If the input direction is valid
+	bool bCanDodge = true; // If the character can dodge
+
+	FTimerHandle DodgeCooldown;
+
 };
 
