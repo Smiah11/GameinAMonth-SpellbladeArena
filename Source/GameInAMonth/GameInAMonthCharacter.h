@@ -116,7 +116,9 @@ protected:
 
 	void ResetCombo(); // Reset the combo counter
 
+	UFUNCTION(BlueprintCallable)
 	void Block(); // Handle the player block
+	UFUNCTION(BlueprintCallable)
 	void StopBlock(); // Stop the player block
 	void DrainStamina(); // Drain the player stamina while blocking
 	void RegenStamina(); // Regen the player stamina while not blocking or attacking
@@ -171,7 +173,7 @@ private:
 
 	//Block System
 	bool bIsBlocking = false; // If the player is blocking
-	float BlockStaminaDrainRate = 5.f; // Stamina drain rate while blocking
+	float BlockStaminaDrainRate = 10.f; // Stamina drain rate while blocking
 	float BlockDamageReduction = 0.5f; // Damage reduction while blocking
 	FTimerHandle StaminaDrainTimer; // Timer to drain the stamina while blocking
 	FTimerHandle RegenStaminaTimer;

@@ -109,6 +109,9 @@ void AGameInAMonthCharacter::BeginPlay()
 
 void AGameInAMonthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
+
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 		
@@ -126,9 +129,12 @@ void AGameInAMonthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::Attack); // Attack action binding
 
 
-		// Blocking
-		EnhancedInputComponent->BindAction(BlockAction, ETriggerEvent::Started, this, &AGameInAMonthCharacter::Block);
-		EnhancedInputComponent->BindAction(BlockAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::StopBlock);
+		// Not using enhanced input for blocking as it is a hold action
+
+		/*
+		PlayerInputComponent->BindAction("Block", IE_Pressed, this, &AGameInAMonthCharacter::Block);
+		PlayerInputComponent->BindAction("Block", IE_Released, this, &AGameInAMonthCharacter::StopBlock);
+		*/
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::Look);
@@ -317,10 +323,10 @@ void AGameInAMonthCharacter::Block()
 	if (CurrentStamina > 0)
 	{
 		bIsBlocking = true; // Set the flag to true
-		PlayAnimMontage(BlockAnimation); // Play the block animation
-		HandleStamina(10.f); // Subtract 10 stamina for blocking will be used for parrying
+		//PlayAnimMontage(BlockAnimation); // Play the block animation
+		//HandleStamina(10.f); // Subtract 10 stamina for blocking will be used for parrying
 
-		//GetWorldTimerManager().SetTimer(StaminaDrainTimer, this, &AGameInAMonthCharacter::DrainStamina, 1.f, true); // Set a timer to drain the stamina
+		GetWorldTimerManager().SetTimer(StaminaDrainTimer, this, &AGameInAMonthCharacter::DrainStamina, 1.f, true); // Set a timer to drain the stamina
 
 	}
 
@@ -329,7 +335,7 @@ void AGameInAMonthCharacter::Block()
 void AGameInAMonthCharacter::StopBlock()
 {
 	bIsBlocking = false; // Set the flag to false;
-	StopAnimMontage(BlockAnimation); // Stop the block animation
+	//StopAnimMontage(BlockAnimation); // Stop the block animation
 	GetWorldTimerManager().ClearTimer(StaminaDrainTimer); // Clear the stamina drain timer
 }
 
