@@ -48,6 +48,14 @@ class AGameInAMonthCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* DodgeAction;
 
+	/** Attack Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* AttackAction;
+
+	/** Block Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* BlockAction;
+
 
 	/** Dodge strength */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat System", meta = (AllowPrivateAccess = "true"))
@@ -85,7 +93,34 @@ protected:
 
 	void StartDodgeCooldown(); // Start the dodge cooldown
 
-	void ResetDodgeCooldown();
+	void ResetDodgeCooldown(); // Reset the dodge cooldown
+
+	void ResetPlayer(); // Reset the player stats for next level
+
+	void ApplyPowerup(); // Apply powerup to the player
+
+	void HandleDeath(); // Handle the player death
+
+	void HandleDamage(float Damage); // Handle the player damage
+
+	void HandleStamina(float StaminaCost); // Handle the player stamina
+
+	void Attack(); // Handle the player attack
+
+	void ComboCheck(); // Check if the player is doing a combo
+
+	void ResetCombo(); // Reset the combo counter
+
+	void Block(); // Handle the player block
+
+
+	UFUNCTION()
+	void OnSwordHit(AActor* HitActor, AActor* OtherActor); // Function to handle the sword hit
+
+
+	void PlayAttackAnimation(); // Play the attack animation
+
+
 
 	
 			
@@ -105,13 +140,54 @@ public:
 
 private:
 
-	float DoubleTapWindow = 0.2f; // Time window to detect double tap
-	float LastDodgeTime = 0.f; // Last time the dodge input was pressed
-	FVector LastInputDirection = FVector::ZeroVector; // Last direction of the  input
+	// Dodge System
+	FVector LastInputDirection = FVector::ZeroVector; // Last direction of the input
 	bool bHasValidInputDirection = false; // If the input direction is valid
 	bool bCanDodge = true; // If the character can dodge
-
 	FTimerHandle DodgeCooldown;
+
+
+
+	//Combat System
+	int ComboCounter = 0; // Combo counter
+	float ComboResetTime = 1.5f; // Time to reset the combo counter
+	FTimerHandle ComboResetTimer; // Timer to reset the combo counter
+	float BaseDamage = 10.f;
+	float DamageMultiplier = 1.f; // Damage multiplier
+	float AttackCooldown = 0.5f; // Attack cooldown
+	float LastAttackTime = 0.f; // Last attack time
+
+
+
+
+
+	//
+
+
+
+
+public:
+
+	//Animations
+	 
+	// Combo Animations
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivate))
+	UAnimSequence* AttackMontage1; // Attack Montage
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivate))
+	UAnimSequence* AttackMontage2; // Attack Montage 2
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivate))
+	UAnimSequence* AttackMontage3; // Attack Montage 3
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivate))
+	UAnimSequence* AttackMontage4; // Attack Montage 4 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivate))
+	UAnimSequence* AttackMontage5; // Attack Montage 5
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivate))
+	UAnimMontage* DodgeMontage; // DodgeMontage
 
 };
 

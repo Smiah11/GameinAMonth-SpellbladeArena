@@ -10,6 +10,9 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Animation/AnimInstance.h"
+#include "GameFramework/Character.h"
+
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -52,6 +55,14 @@ AGameInAMonthCharacter::AGameInAMonthCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+
+
+	// Set the default values for the character
+	Health = MaxHealth;
+	Stamina = MaxStamina;
+	ComboCounter = 0;
+	ComboResetTime = 1.5f;
 }
 
 void AGameInAMonthCharacter::BeginPlay()
@@ -86,6 +97,9 @@ void AGameInAMonthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 		// Dodging
 		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::Dodge); //Dodge is a combo input
+
+		// Attacking
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::Attack); // Attack action binding
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::Look);
@@ -155,7 +169,14 @@ void AGameInAMonthCharacter::Dodge()
 		FVector Direction = LastInputDirection; // Get the last input direction
 		LaunchCharacter(Direction * DodgeStrength, true, true); // Launch the character in the direction of the dodge
 		bHasValidInputDirection = false; // Reset the flag
+		HandleStamina(10.f); // Subtract 10 stamina
 		StartDodgeCooldown(); // Start the dodge cooldown
+
+		if (DodgeMontage != nullptr)
+		{
+			PlayAnimMontage(DodgeMontage); // Play the dodge montage
+		}
+
 	}
 
 
@@ -171,4 +192,149 @@ void AGameInAMonthCharacter::ResetDodgeCooldown()
 {
 		bCanDodge = true; // Set the flag to true so the player can dodge again
 }
+
+
+
+void AGameInAMonthCharacter::HandleDamage(float Damage)
+{
+
+	Health -= Damage; // Subtract the damage from the health
+	if (Health <= 0) // Check if the health is less than or equal to 0
+	{
+		HandleDeath(); // Call the death function
+	}
+}
+
+void AGameInAMonthCharacter::HandleStamina(float StaminaCost)
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("Handling Stamina"))
+
+		Stamina -= StaminaCost; // Subtract the stamina cost from the stamina
+		if (Stamina <= 0) // Check if the stamina is less than or equal to 0
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Out of Stamina"))
+		}
+}
+
+void AGameInAMonthCharacter::Attack()
+{
+	float CurrentTime = GetWorld()->GetTimeSeconds(); // Get the current time
+
+	if (CurrentTime - LastAttackTime < AttackCooldown) // Check if the current time is less than the attack cooldown
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Attack on Cooldown"))
+		return; // Return if the attack is on cooldown
+	}
+
+	LastAttackTime = CurrentTime; // Set the last attack time to the current time
+
+	if (ComboCounter == 0)
+	{
+		ComboCounter++; // Increment the combo counter
+		PlayAttackAnimation(); // Play the attack animation
+		UE_LOG(LogTemp, Warning, TEXT("Combo Counter: %d"), ComboCounter)
+		
+	}
+	else
+	{
+		ComboCheck(); // Check the combo
+		UE_LOG(LogTemp, Warning, TEXT("Combo Counter: %d"), ComboCounter); // Log the combo counter
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(ComboResetTimer, this, &AGameInAMonthCharacter::ResetCombo, ComboResetTime, false); // Set a timer to reset the combo counter 
+
+
+}
+
+void AGameInAMonthCharacter::ComboCheck()
+{
+	ComboCounter = ComboCounter % 5 + 1; // Reset the combo counter to 1 if it reaches 5
+	PlayAttackAnimation(); // Play the attack animation
+	
+
+}
+
+void AGameInAMonthCharacter::ResetCombo()
+{
+	ComboCounter = 0;
+}
+
+void AGameInAMonthCharacter::Block()
+{
+}
+
+void AGameInAMonthCharacter::OnSwordHit(AActor* HitActor, AActor* OtherActor)
+{
+}
+
+void AGameInAMonthCharacter::PlayAttackAnimation()
+{
+
+	/*if (IsAnyMontagePlaying())
+	{
+
+		UE_LOG(LogTemp, Warning, TEXT("Montage Playing"))
+		return;
+
+	}*/
+
+	UAnimMontage* MontageToPlay = nullptr;
+
+
+	// bit of a cheat here, but we're going to create a dynamic montage from the slot animations
+	UAnimMontage* Montage1 = UAnimMontage::CreateSlotAnimationAsDynamicMontage(AttackMontage1, "DefaultSlot");
+	UAnimMontage* Montage2 = UAnimMontage::CreateSlotAnimationAsDynamicMontage(AttackMontage2, "DefaultSlot");
+	UAnimMontage* Montage3 = UAnimMontage::CreateSlotAnimationAsDynamicMontage(AttackMontage3, "DefaultSlot");
+	UAnimMontage* Montage4 = UAnimMontage::CreateSlotAnimationAsDynamicMontage(AttackMontage4, "DefaultSlot");
+	UAnimMontage* Montage5 = UAnimMontage::CreateSlotAnimationAsDynamicMontage(AttackMontage5, "DefaultSlot");
+
+
+	// Switch Statement using the ComboCounter to determine which attack animation to play
+
+	switch (ComboCounter)
+	{
+	case 1:
+		MontageToPlay = Montage1;
+		break;
+	case 2:
+		MontageToPlay = Montage2;
+		break;
+	case 3:
+		MontageToPlay = Montage3;
+		break;
+	case 4:
+		MontageToPlay = Montage4;
+		break;
+	case 5:
+		MontageToPlay = Montage5;
+		break;
+	default:
+		MontageToPlay = Montage1;
+		break;
+	}
+
+	if (MontageToPlay != nullptr)
+	{
+		PlayAnimMontage(MontageToPlay);
+		UE_LOG(LogTemp, Warning, TEXT("Playing Attack Animation"))
+	}
+}
+
+
+void AGameInAMonthCharacter::ResetPlayer()
+{
+}
+
+void AGameInAMonthCharacter::ApplyPowerup()
+{
+}
+
+void AGameInAMonthCharacter::HandleDeath()
+{
+	// Handle the death of the character
+	// For now, we will just reset the player
+	Destroy();
+}
+
 
