@@ -99,6 +99,19 @@ void AGameInAMonthCharacter::Tick(float DeltaTime)
 	}
 
 
+	if (bIsMageModeActive)
+	{
+		// If the player is in mage mode, they can't attack or dodge
+		bCanAttack = false;
+		GetWorldTimerManager().ClearTimer(RegenStaminaTimer);
+	}
+	else
+	{
+		bCanAttack = true;
+		GetWorldTimerManager().SetTimer(RegenStaminaTimer, this, &AGameInAMonthCharacter::RegenStamina, 2.0f, true); //Regen stamina every 1 second
+
+	}
+
 
 }
 
@@ -145,6 +158,37 @@ void AGameInAMonthCharacter::BeginPlay()
 //////////////////////////////////////////////////////////////////////////
 // Input
 
+void AGameInAMonthCharacter::ToggleMageMode()
+{
+
+
+
+	// Toggle the mage mode
+	if (bCanToggleMageMode)
+	{
+
+		bIsMageModeActive = !bIsMageModeActive;
+
+		// Set the camera
+		//CameraBoom->TargetArmLength = bIsMageModeActive ? 500.f : 400.f;
+		FollowCamera->SetRelativeLocation(bIsMageModeActive ? FVector(280.f, 70.f, 60.f) : FVector(170.f, 110.f, 70.f));
+
+
+
+		// Set the movement speed
+		GetCharacterMovement()->MaxWalkSpeed = bIsMageModeActive ? 1000.f : 500.f;
+
+
+
+		bCanToggleMageMode = false;
+
+		GetWorldTimerManager().SetTimer(MageModeCooldownTimer, this, &AGameInAMonthCharacter::ResetMageModeToggle, MageModeCooldowm, false); //Reset the timer after 1 second
+
+
+	}
+
+}
+
 void AGameInAMonthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 
@@ -165,6 +209,11 @@ void AGameInAMonthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 		// Attacking
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::Attack); // Attack action binding
+
+
+
+		// MageMode
+		EnhancedInputComponent->BindAction(MageModeAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::ToggleMageMode);
 
 
 		// Not using enhanced input for blocking as it is a hold action
@@ -418,6 +467,31 @@ void AGameInAMonthCharacter::RegenStamina()
 		{
 			CurrentStamina = MaxStamina; // Set the stamina to the max stamina
 		}
+}
+
+void AGameInAMonthCharacter::RegenMana()
+{
+		CurrentMana += 5.f; // Regen by 5
+	CurrentMana = FMath::Clamp(CurrentMana, 0.f, MaxMana); // Clamp the mana
+
+	if (CurrentMana >= MaxMana)
+	{
+		CurrentMana = MaxMana; // Set the mana to the max mana
+	}
+}
+
+void AGameInAMonthCharacter::HandleMana(float ManaCost)
+{
+		CurrentMana -= ManaCost; // Subtract the mana cost from the mana
+		if (CurrentMana <= 0) // Check if the mana is less than or equal to 0
+		{
+			CurrentMana = 0; // Set the mana to 0
+		}
+}
+
+void AGameInAMonthCharacter::ResetMageModeToggle()
+{
+	bCanToggleMageMode = true; // Set the flag to true
 }
 
 

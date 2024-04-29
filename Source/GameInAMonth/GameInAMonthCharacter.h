@@ -57,6 +57,14 @@ class AGameInAMonthCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* BlockAction;
 
+	// Mage Mode Input Action
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* MageModeAction;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mage Mode", meta = (AllowPrivateAccess = "true"))
+	bool bIsMageModeActive = false;
+
 
 	/** Dodge strength */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat System", meta = (AllowPrivateAccess = "true"))
@@ -75,6 +83,11 @@ class AGameInAMonthCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
 	float MaxStamina = 100.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
+	float CurrentMana = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
+	float MaxMana = 100.f;
 
 
 
@@ -125,11 +138,20 @@ protected:
 	void RegenStamina(); // Regen the player stamina while not blocking or attacking
 
 
+	//Mage mode
+	void RegenMana(); // Regen the player mana
+	void HandleMana(float ManaCost); // Handle the player mana
+	void ResetMageModeToggle(); // Reset the mage mode toggle
+
+
 	void PlayAttackAnimation(); // Play the attack animation
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	TArray<AMainSword*> AttachedSwords; // Sword class
+
+
+	void ToggleMageMode(); // Toggle the mage mode
 	
 
 protected:
@@ -180,7 +202,15 @@ private:
 
 
 
-	//
+	//Mage Mode
+	float MageModeManaCost = 20.f; // Stamina cost for mage mode
+	float LastMageAttackTime = 0.f; // Last attack time for mage mode
+	float MageModeCooldowm = 2.f; // Switch speed for mage mode
+	bool bCanToggleMageMode = true; // If the player can toggle mage mode
+	FTimerHandle MageModeCooldownTimer; // Timer to cooldown the mage mode
+	FTimerHandle RegenManaTimer; // Timer to regen the mana will only use when not in mage mode
+
+
 
 
 
