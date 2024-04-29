@@ -16,6 +16,15 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
+UENUM(BlueprintType)
+enum class EAbilityType : uint8
+{
+	ManaBall UMETA(DisplayName = "Manaball"),
+	AOE UMETA(DisplayName = "AOE"),
+	Teleport UMETA(DisplayName = "Teleport"),
+};
+
+
 UCLASS(config=Game)
 class AGameInAMonthCharacter : public ACharacter
 {
@@ -57,9 +66,14 @@ class AGameInAMonthCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* BlockAction;
 
+
 	// Mage Mode Input Action
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MageModeAction;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* CastAction;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mage Mode", meta = (AllowPrivateAccess = "true"))
@@ -130,6 +144,11 @@ protected:
 
 	void ResetCombo(); // Reset the combo counter
 
+	void SetUpWarriorControls(UInputComponent* Input); // Set up the warrior controls
+
+	void AdjustInput();
+
+
 	UFUNCTION(BlueprintCallable)
 	void Block(); // Handle the player block
 	UFUNCTION(BlueprintCallable)
@@ -140,15 +159,38 @@ protected:
 
 	//Mage mode
 	void RegenMana(); // Regen the player mana
+
+	UFUNCTION(BlueprintCallable)
 	void HandleMana(float ManaCost); // Handle the player mana
+
 	void ResetMageModeToggle(); // Reset the mage mode toggle
+	void SetUpMageControls(UInputComponent* Input); // Set up the mage controls
+
+	//UFUNCTION(BlueprintCallable)
+	//void ActivateAbilityMode(); // Activate the ability mode
+
+	UFUNCTION(BlueprintCallable)
+	void ExecuteAbility(); // Execute the ability
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Magic")
+	void CastManaBall();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Magic")
+	void CastAOE();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Magic")
+	void CastTeleport();
 
 
 	void PlayAttackAnimation(); // Play the attack animation
 
 
+	// Attached swords on the player
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	TArray<AMainSword*> AttachedSwords; // Sword class
+	TArray<AMainSword*> AttachedSwords; // Sword class // MAY NEED TO REMOVE TO FIX THE DOUBLE ATTACK BUG
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Abilities", meta = (AllowPrivateAccess = "true"))
+	TEnumAsByte<EAbilityType>CurrentAbilityType;
 
 
 	void ToggleMageMode(); // Toggle the mage mode
@@ -207,6 +249,7 @@ private:
 	float LastMageAttackTime = 0.f; // Last attack time for mage mode
 	float MageModeCooldowm = 2.f; // Switch speed for mage mode
 	bool bCanToggleMageMode = true; // If the player can toggle mage mode
+	bool bIsAbilityReady = false; // If the player can use the ability
 	FTimerHandle MageModeCooldownTimer; // Timer to cooldown the mage mode
 	FTimerHandle RegenManaTimer; // Timer to regen the mana will only use when not in mage mode
 

@@ -103,12 +103,12 @@ void AGameInAMonthCharacter::Tick(float DeltaTime)
 	{
 		// If the player is in mage mode, they can't attack or dodge
 		bCanAttack = false;
-		GetWorldTimerManager().ClearTimer(RegenStaminaTimer);
+		GetWorldTimerManager().ClearTimer(RegenManaTimer);
 	}
 	else
 	{
 		bCanAttack = true;
-		GetWorldTimerManager().SetTimer(RegenStaminaTimer, this, &AGameInAMonthCharacter::RegenStamina, 2.0f, true); //Regen stamina every 1 second
+		GetWorldTimerManager().SetTimer(RegenManaTimer, this, &AGameInAMonthCharacter::RegenMana, 2.0f, true); //Regen stamina every 1 second
 
 	}
 
@@ -176,13 +176,15 @@ void AGameInAMonthCharacter::ToggleMageMode()
 
 
 		// Set the movement speed
-		GetCharacterMovement()->MaxWalkSpeed = bIsMageModeActive ? 1000.f : 500.f;
+		GetCharacterMovement()->MaxWalkSpeed = bIsMageModeActive ? 800.f : 500.f;
 
+		AdjustInput(); // Adjust the input bindings BASED ON the mode
 
+		bIsAbilityReady = true; // Set the ability to be ready
 
-		bCanToggleMageMode = false;
+		bCanToggleMageMode = false; // Set the ability to be on cooldown
 
-		GetWorldTimerManager().SetTimer(MageModeCooldownTimer, this, &AGameInAMonthCharacter::ResetMageModeToggle, MageModeCooldowm, false); //Reset the timer after 1 second
+		GetWorldTimerManager().SetTimer(MageModeCooldownTimer, this, &AGameInAMonthCharacter::ResetMageModeToggle, MageModeCooldowm, false); //Reset the timer after 2 second
 
 
 	}
@@ -195,7 +197,47 @@ void AGameInAMonthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
+
+
+	if (bIsMageModeActive == true)
+	{
+		SetUpMageControls(PlayerInputComponent);
+	}
+	else
+	{
+		SetUpWarriorControls(PlayerInputComponent);
+	}
+
+}
+
+void AGameInAMonthCharacter::AdjustInput()
+{
+	// Get the enhanced input component
+	UEnhancedInputComponent* NewInputComponent = Cast<UEnhancedInputComponent>(GetComponentByClass(UEnhancedInputComponent::StaticClass()));
+
+	if (NewInputComponent)
+	{
+		// Clear current bindings specific to the modes
+		NewInputComponent->ClearActionBindings();
+
+		// Conditionally set up controls based on the active mode
+		if (bIsMageModeActive == true)
+		{
+			SetUpMageControls(NewInputComponent);
+			UE_LOG(LogTemp, Warning, TEXT("Mage Mode Active"))
+		}
+		else
+		{
+			SetUpWarriorControls(NewInputComponent);
+			UE_LOG(LogTemp, Warning, TEXT("Warrior Mode Active"))
+		}
+	}
+}
+
+void AGameInAMonthCharacter::SetUpWarriorControls(UInputComponent* Input)
+{
+	// Set up action bindings
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(Input)) {
 
 		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
@@ -210,20 +252,17 @@ void AGameInAMonthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 		// Attacking
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::Attack); // Attack action binding
 
-
-
 		// MageMode
 		EnhancedInputComponent->BindAction(MageModeAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::ToggleMageMode);
-
 
 		// Not using enhanced input for blocking as it is a hold action
 
 		/*
-		PlayerInputComponent->BindAction("Block", IE_Pressed, this, &AGameInAMonthCharacter::Block);
-		PlayerInputComponent->BindAction("Block", IE_Released, this, &AGameInAMonthCharacter::StopBlock);
+			PlayerInputComponent->BindAction("Block", IE_Pressed, this, &AGameInAMonthCharacter::Block);
+			PlayerInputComponent->BindAction("Block", IE_Released, this, &AGameInAMonthCharacter::StopBlock);
 		*/
 
-		// Looking
+			// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::Look);
 	}
 	else
@@ -232,6 +271,75 @@ void AGameInAMonthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 	}
 }
 
+
+
+void AGameInAMonthCharacter::SetUpMageControls(UInputComponent* Input)
+{
+
+
+	// Set up action bindings
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(Input)) {
+
+		// Jumping
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+
+		// Moving
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::Move);
+
+		// Dodging
+		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::Dodge); // Activate ability mode action binding
+
+		// Attacking
+		EnhancedInputComponent->BindAction(CastAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::ExecuteAbility); // Execute ability action binding
+
+		// MageMode
+		EnhancedInputComponent->BindAction(MageModeAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::ToggleMageMode);
+
+		// Not using enhanced input for blocking as it is a hold action
+
+		/*
+				PlayerInputComponent->BindAction("Block", IE_Pressed, this, &AGameInAMonthCharacter::Block);
+						PlayerInputComponent->BindAction("Block", IE_Released, this, &AGameInAMonthCharacter::StopBlock);
+								*/
+
+		// Looking
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::Look);
+	}
+	else
+	{
+		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+	}
+
+}
+
+
+void AGameInAMonthCharacter::ExecuteAbility()
+{
+	if (!bIsAbilityReady)
+	{
+		return;
+	}
+
+	UE_LOG(LogTemplateCharacter, Log, TEXT("Ability Executed"));
+
+	switch (CurrentAbilityType)
+	{
+	case EAbilityType::ManaBall:
+		CastManaBall();
+		break;
+	case EAbilityType::AOE:
+		CastAOE();
+		break;
+	case EAbilityType::Teleport:
+		CastTeleport();
+		break;
+
+		default:
+			UE_LOG(LogTemplateCharacter, Error, TEXT("Ability not implemented"));
+			break;
+	}
+}
 
 void AGameInAMonthCharacter::SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled)
 {
@@ -423,6 +531,8 @@ void AGameInAMonthCharacter::ResetCombo()
 	ComboCounter = 0;
 }
 
+
+
 void AGameInAMonthCharacter::Block()
 {
 	if (CurrentStamina > 0)
@@ -493,6 +603,7 @@ void AGameInAMonthCharacter::ResetMageModeToggle()
 {
 	bCanToggleMageMode = true; // Set the flag to true
 }
+
 
 
 void AGameInAMonthCharacter::PlayAttackAnimation()
