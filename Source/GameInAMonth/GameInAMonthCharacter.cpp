@@ -12,6 +12,7 @@
 #include "InputActionValue.h"
 #include "Animation/AnimInstance.h"
 #include "GameFramework/Character.h"
+#include "MainSword.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -23,7 +24,7 @@ AGameInAMonthCharacter::AGameInAMonthCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-		
+
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -59,6 +60,9 @@ AGameInAMonthCharacter::AGameInAMonthCharacter()
 
 
 	// Set the default values for the character
+
+
+
 	CurrentHealth = MaxHealth;
 	CurrentStamina = MaxStamina;
 	ComboCounter = 0;
@@ -67,24 +71,35 @@ AGameInAMonthCharacter::AGameInAMonthCharacter()
 
 }
 
+
+
 void AGameInAMonthCharacter::Tick(float DeltaTime)
 {
-		Super::Tick(DeltaTime);
+	Super::Tick(DeltaTime);
 
 
-		if (CurrentStamina <= 0)
+	if (CurrentStamina <= 0)
+	{
+		// If the player has no stamina, they can't attack or dodge
+		bCanAttack = false;
+		bCanDodge = false;
+
+	}
+	else
+	{
+
+		// If the player has enough stamina, they can attack set to 5
+		bCanAttack = true;
+
+		if (CurrentStamina >= DodgeStaminaCost)
 		{
-
-			bCanAttack = false;
-			bCanDodge = false;
-
+			// If the player has enough stamina, they can dodge
+			bCanDodge = true;
 		}
-		else
-		{
-			bCanAttack = true;
-		}
+	}
 
-		
+
+
 }
 
 void AGameInAMonthCharacter::BeginPlay()
@@ -101,7 +116,30 @@ void AGameInAMonthCharacter::BeginPlay()
 		}
 	}
 
-	GetWorldTimerManager().SetTimer(RegenStaminaTimer, this, &AGameInAMonthCharacter::RegenStamina, 1.0f, true); //Regen stamina every 1 second
+	//Find the attached swords
+
+	TArray<USceneComponent*> AttachedComponents;
+	GetMesh()->GetChildrenComponents(true, AttachedComponents);
+
+	for (USceneComponent* Component : AttachedComponents)
+	{
+		AMainSword* Sword = Cast<AMainSword>(Component->GetOwner());
+		if (Sword)
+		{
+			AttachedSwords.Add(Sword);
+
+			// set the properties that i want
+
+			AttackCooldown = Sword->AttackSpeed;
+			BaseDamage = Sword->NewDamage;
+
+
+		}
+	}
+
+
+
+	GetWorldTimerManager().SetTimer(RegenStaminaTimer, this, &AGameInAMonthCharacter::RegenStamina, 2.0f, true); //Regen stamina every 1 second
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -114,7 +152,7 @@ void AGameInAMonthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
+
 		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
@@ -145,6 +183,18 @@ void AGameInAMonthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 	}
 }
 
+
+void AGameInAMonthCharacter::SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled)
+{
+	// Set the collision of the box collision of the sword will be used wwith anim Notifys
+
+	for (AMainSword* MainSword : AttachedSwords)
+	{
+		MainSword->BoxCollision->SetCollisionEnabled(CollisionEnabled);
+	}
+
+}
+
 void AGameInAMonthCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
@@ -158,7 +208,7 @@ void AGameInAMonthCharacter::Move(const FInputActionValue& Value)
 
 		// get forward vector
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
+
 		// get right vector 
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
@@ -204,7 +254,7 @@ void AGameInAMonthCharacter::Dodge()
 		FVector Direction = LastInputDirection; // Get the last input direction
 		LaunchCharacter(Direction * DodgeStrength, true, true); // Launch the character in the direction of the dodge
 		bHasValidInputDirection = false; // Reset the flag
-		HandleStamina(10.f); // Subtract 10 stamina
+		HandleStamina(DodgeStaminaCost); // Subtract 10 stamina
 		StartDodgeCooldown(); // Start the dodge cooldown
 
 		if (DodgeMontage != nullptr)
@@ -225,7 +275,7 @@ void AGameInAMonthCharacter::StartDodgeCooldown()
 
 void AGameInAMonthCharacter::ResetDodgeCooldown()
 {
-		bCanDodge = true; // Set the flag to true so the player can dodge again
+	bCanDodge = true; // Set the flag to true so the player can dodge again
 }
 
 
@@ -244,7 +294,7 @@ float AGameInAMonthCharacter::TakeDamage(float DamageAmount, FDamageEvent const&
 {
 	if (bIsBlocking)
 	{
-		DamageAmount*= BlockDamageReduction; // Reduce the damage by the block damage reduction
+		DamageAmount *= BlockDamageReduction; // Reduce the damage by the block damage reduction
 	}
 
 
@@ -256,13 +306,13 @@ float AGameInAMonthCharacter::TakeDamage(float DamageAmount, FDamageEvent const&
 void AGameInAMonthCharacter::HandleStamina(float StaminaCost)
 {
 
-	UE_LOG(LogTemp, Warning, TEXT("Handling Stamina"))
+	//UE_LOG(LogTemp, Warning, TEXT("Handling Stamina"))
 
 		CurrentStamina -= StaminaCost; // Subtract the stamina cost from the stamina
-		if (CurrentStamina <= 0) // Check if the stamina is less than or equal to 0
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Out of Stamina"))
-		}
+	if (CurrentStamina <= 0) // Check if the stamina is less than or equal to 0
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Out of Stamina"))
+	}
 }
 
 void AGameInAMonthCharacter::Attack()
@@ -271,20 +321,25 @@ void AGameInAMonthCharacter::Attack()
 	if (!bCanAttack)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Cannot Attack"))
-		return;
+			return;
 	}
 
 	float CurrentTime = GetWorld()->GetTimeSeconds(); // Get the current time
 
-	if (CurrentTime - LastAttackTime < AttackCooldown ) // Check if the current time is less than the attack cooldown
+	if (CurrentTime - LastAttackTime < AttackCooldown) // Check if the current time is less than the attack cooldown
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Attack on Cooldown"))
-		return; // Return if the attack is on cooldown
+		//UE_LOG(LogTemp, Warning, TEXT("Attack on Cooldown"))
+			return; // Return if the attack is on cooldown
 	}
 
 	LastAttackTime = CurrentTime; // Set the last attack time to the current time
 
-	HandleStamina(5);
+	HandleStamina(AttackStaminaCost);
+
+	for (AMainSword* Sword : AttachedSwords)
+	{
+		Sword->SetCanDamage(true); // Can damage as long as succesful entry into attack
+	}
 
 
 	if (ComboCounter == 0)
@@ -292,10 +347,11 @@ void AGameInAMonthCharacter::Attack()
 		ComboCounter++; // Increment the combo counter
 		PlayAttackAnimation(); // Play the attack animation
 		UE_LOG(LogTemp, Warning, TEXT("Combo Counter: %d"), ComboCounter)
-		
+
 	}
 	else
 	{
+	
 		ComboCheck(); // Check the combo
 		UE_LOG(LogTemp, Warning, TEXT("Combo Counter: %d"), ComboCounter); // Log the combo counter
 	}
@@ -309,7 +365,7 @@ void AGameInAMonthCharacter::ComboCheck()
 {
 	ComboCounter = ComboCounter % 5 + 1; // Reset the combo counter to 1 if it reaches 5
 	PlayAttackAnimation(); // Play the attack animation
-	
+
 
 }
 
@@ -358,15 +414,12 @@ void AGameInAMonthCharacter::RegenStamina()
 	CurrentStamina = FMath::Clamp(CurrentStamina, 0.f, MaxStamina); // Clamp the stamina
 	UE_LOG(LogTemp, Warning, TEXT("Stamina: %f"), CurrentStamina)
 
-	if (CurrentStamina >= MaxStamina)
-	{
-		CurrentStamina = MaxStamina; // Set the stamina to the max stamina
-	}
+		if (CurrentStamina >= MaxStamina)
+		{
+			CurrentStamina = MaxStamina; // Set the stamina to the max stamina
+		}
 }
 
-void AGameInAMonthCharacter::OnSwordHit(AActor* HitActor, AActor* OtherActor)
-{
-}
 
 void AGameInAMonthCharacter::PlayAttackAnimation()
 {
@@ -392,32 +445,42 @@ void AGameInAMonthCharacter::PlayAttackAnimation()
 
 	// Switch Statement using the ComboCounter to determine which attack animation to play
 
-	switch (ComboCounter)
-	{
-	case 1:
-		MontageToPlay = Montage1;
-		break;
-	case 2:
-		MontageToPlay = Montage2;
-		break;
-	case 3:
-		MontageToPlay = Montage3;
-		break;
-	case 4:
-		MontageToPlay = Montage4;
-		break;
-	case 5:
-		MontageToPlay = Montage5;
-		break;
-	default:
-		MontageToPlay = Montage1;
-		break;
-	}
+
+		switch (ComboCounter)
+		{
+		case 1:
+			MontageToPlay = Montage1;
+			break;
+		case 2:
+			MontageToPlay = Montage2;
+			break;
+		case 3:
+			MontageToPlay = Montage3;
+			break;
+		case 4:
+			MontageToPlay = Montage4;
+			break;
+		case 5:
+			MontageToPlay = Montage5;
+			break;
+		default:
+			MontageToPlay = Montage1;
+			break;
+		}
+
 
 	if (MontageToPlay != nullptr)
 	{
 		PlayAnimMontage(MontageToPlay);
-		UE_LOG(LogTemp, Warning, TEXT("Playing Attack Animation"))
+		//UE_LOG(LogTemp, Warning, TEXT("Playing Attack Animation"))
+	}
+
+
+	float Damage = BaseDamage + ComboCounter * DamageMultiplier; // Calculate the damage
+
+	for (AMainSword* Sword : AttachedSwords)
+	{
+		Sword->PerformAttack(Damage); // Set the damage of the sword
 	}
 }
 
@@ -435,7 +498,7 @@ void AGameInAMonthCharacter::HandleDeath()
 	// Handle the death of the character
 	// For now, we will just reset the player
 
-	
+
 	Destroy();
 }
 

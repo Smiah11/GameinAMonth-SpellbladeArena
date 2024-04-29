@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "MainSword.h"
 #include "GameInAMonthCharacter.generated.h"
 
 class USpringArmComponent;
@@ -81,8 +82,8 @@ public:
 	AGameInAMonthCharacter();
 
 
-
-	
+	UFUNCTION(BlueprintCallable)
+	void SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled); // Set the weapon collision enabled
 
 protected:
 
@@ -124,16 +125,12 @@ protected:
 	void RegenStamina(); // Regen the player stamina while not blocking or attacking
 
 
-	UFUNCTION()
-	void OnSwordHit(AActor* HitActor, AActor* OtherActor); // Function to handle the sword hit
-
-
 	void PlayAttackAnimation(); // Play the attack animation
 
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	TArray<AMainSword*> AttachedSwords; // Sword class
 	
-			
 
 protected:
 	// APawn interface
@@ -157,23 +154,26 @@ private:
 	bool bHasValidInputDirection = false; // If the input direction is valid
 	bool bCanDodge = true; // If the character can dodge
 	FTimerHandle DodgeCooldown;
+	float DodgeStaminaCost = 10.f;
 
 
 
 	//Combat System
 	int ComboCounter = 0; // Combo counter
-	float ComboResetTime = 1.5f; // Time to reset the combo counter
+	float ComboResetTime = 2.f; // Time to reset the combo counter
 	FTimerHandle ComboResetTimer; // Timer to reset the combo counter
-	float BaseDamage = 10.f;
+	float AttackStaminaCost = 5.f; // Stamina cost for attacking
+	float BaseDamage;
 	float DamageMultiplier = 1.f; // Damage multiplier
-	float AttackCooldown = 0.5f; // Attack cooldown
+	float AttackCooldown; // Attack cooldown
 	float LastAttackTime = 0.f; // Last attack time
 	bool bCanAttack = true; // If the player can attack
 
 
 	//Block System
 	bool bIsBlocking = false; // If the player is blocking
-	float BlockStaminaDrainRate = 10.f; // Stamina drain rate while blocking
+	float BlockStaminaCost = 5.f;
+	float BlockStaminaDrainRate = 10.f; // Stamina drain rate while blocking needs to be double of the stamin regen to make it effective
 	float BlockDamageReduction = 0.5f; // Damage reduction while blocking
 	FTimerHandle StaminaDrainTimer; // Timer to drain the stamina while blocking
 	FTimerHandle RegenStaminaTimer;
