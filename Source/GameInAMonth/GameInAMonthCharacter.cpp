@@ -103,6 +103,16 @@ void AGameInAMonthCharacter::Tick(float DeltaTime)
 	{
 		// If the player is in mage mode, they can't attack or dodge
 		bCanAttack = false;
+
+		if (CurrentMana <= 20)
+		{
+			bIsAbilityReady = false;
+		}
+		else
+		{
+			bIsAbilityReady = true;
+		}
+
 		GetWorldTimerManager().ClearTimer(RegenManaTimer);
 	}
 	else
@@ -161,10 +171,8 @@ void AGameInAMonthCharacter::BeginPlay()
 void AGameInAMonthCharacter::ToggleMageMode()
 {
 
-
-
 	// Toggle the mage mode
-	if (bCanToggleMageMode)
+	if (bCanToggleMageMode) // cool down check
 	{
 
 		bIsMageModeActive = !bIsMageModeActive;
@@ -198,15 +206,22 @@ void AGameInAMonthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 	// Set up action bindings
 
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
 
-	if (bIsMageModeActive == true)
-	{
-		SetUpMageControls(PlayerInputComponent);
+		// Jumping
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+
+		// Moving
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::Move);
+
+		// Looking
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::Look);
+
 	}
-	else
-	{
-		SetUpWarriorControls(PlayerInputComponent);
-	}
+
+	AdjustInput(); // Adjust the input bindings BASED ON the mode
 
 }
 
@@ -221,7 +236,7 @@ void AGameInAMonthCharacter::AdjustInput()
 		NewInputComponent->ClearActionBindings();
 
 		// Conditionally set up controls based on the active mode
-		if (bIsMageModeActive == true)
+		if (bIsMageModeActive)
 		{
 			SetUpMageControls(NewInputComponent);
 			UE_LOG(LogTemp, Warning, TEXT("Mage Mode Active"))
@@ -239,6 +254,7 @@ void AGameInAMonthCharacter::SetUpWarriorControls(UInputComponent* Input)
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(Input)) {
 
+
 		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
@@ -246,11 +262,16 @@ void AGameInAMonthCharacter::SetUpWarriorControls(UInputComponent* Input)
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::Move);
 
+		// Looking
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::Look);
+
+
 		// Dodging
 		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::Dodge); //Dodge is a combo input
 
 		// Attacking
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::Attack); // Attack action binding
+
 
 		// MageMode
 		EnhancedInputComponent->BindAction(MageModeAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::ToggleMageMode);
@@ -262,8 +283,7 @@ void AGameInAMonthCharacter::SetUpWarriorControls(UInputComponent* Input)
 			PlayerInputComponent->BindAction("Block", IE_Released, this, &AGameInAMonthCharacter::StopBlock);
 		*/
 
-			// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::Look);
+
 	}
 	else
 	{
@@ -280,6 +300,8 @@ void AGameInAMonthCharacter::SetUpMageControls(UInputComponent* Input)
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(Input)) {
 
+
+
 		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
@@ -287,24 +309,23 @@ void AGameInAMonthCharacter::SetUpMageControls(UInputComponent* Input)
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::Move);
 
+		// Looking
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::Look);
+
+
 		// Dodging
 		EnhancedInputComponent->BindAction(DodgeAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::Dodge); // Activate ability mode action binding
 
-		// Attacking
-		EnhancedInputComponent->BindAction(CastAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::ExecuteAbility); // Execute ability action binding
+
+		//EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &AGameInAMonthCharacter::ExecuteTeleport); // Attack action binding replaces Attack Action swapping for blueprint
+
 
 		// MageMode
 		EnhancedInputComponent->BindAction(MageModeAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::ToggleMageMode);
 
+		EnhancedInputComponent->BindAction(TeleportAcivationAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::ExecuteTeleport);
 		// Not using enhanced input for blocking as it is a hold action
 
-		/*
-				PlayerInputComponent->BindAction("Block", IE_Pressed, this, &AGameInAMonthCharacter::Block);
-						PlayerInputComponent->BindAction("Block", IE_Released, this, &AGameInAMonthCharacter::StopBlock);
-								*/
-
-		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::Look);
 	}
 	else
 	{
@@ -314,6 +335,8 @@ void AGameInAMonthCharacter::SetUpMageControls(UInputComponent* Input)
 }
 
 
+
+/*
 void AGameInAMonthCharacter::ExecuteAbility()
 {
 	if (!bIsAbilityReady)
@@ -340,6 +363,9 @@ void AGameInAMonthCharacter::ExecuteAbility()
 			break;
 	}
 }
+
+*/
+
 
 void AGameInAMonthCharacter::SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled)
 {
@@ -443,7 +469,7 @@ void AGameInAMonthCharacter::HandleDamage(float Damage)
 	CurrentHealth -= Damage; // Subtract the damage from the health
 	if (CurrentHealth <= 0) // Check if the health is less than or equal to 0
 	{
-		HandleDeath(); // Call the death function
+		//HandleDeath(); // Call the death function issue with damage being applied due to weapon not ignoring/////////////////////
 	}
 }
 
@@ -568,7 +594,6 @@ void AGameInAMonthCharacter::DrainStamina()
 void AGameInAMonthCharacter::RegenStamina()
 {
 
-
 	CurrentStamina += 5.f; // Regen by 2
 	CurrentStamina = FMath::Clamp(CurrentStamina, 0.f, MaxStamina); // Clamp the stamina
 	UE_LOG(LogTemp, Warning, TEXT("Stamina: %f"), CurrentStamina)
@@ -605,6 +630,15 @@ void AGameInAMonthCharacter::ResetMageModeToggle()
 }
 
 
+
+void AGameInAMonthCharacter::ExecuteTeleport()
+{
+	if (!bIsAbilityReady)
+		return;
+
+	CastTeleport(); // Cast the teleport
+
+}
 
 void AGameInAMonthCharacter::PlayAttackAnimation()
 {

@@ -16,6 +16,8 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
+
+/*
 UENUM(BlueprintType)
 enum class EAbilityType : uint8
 {
@@ -23,7 +25,7 @@ enum class EAbilityType : uint8
 	AOE UMETA(DisplayName = "AOE"),
 	Teleport UMETA(DisplayName = "Teleport"),
 };
-
+*/
 
 UCLASS(config=Game)
 class AGameInAMonthCharacter : public ACharacter
@@ -74,6 +76,9 @@ class AGameInAMonthCharacter : public ACharacter
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* CastAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* TeleportAcivationAction;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mage Mode", meta = (AllowPrivateAccess = "true"))
@@ -169,8 +174,8 @@ protected:
 	//UFUNCTION(BlueprintCallable)
 	//void ActivateAbilityMode(); // Activate the ability mode
 
-	UFUNCTION(BlueprintCallable)
-	void ExecuteAbility(); // Execute the ability
+	//UFUNCTION(BlueprintCallable)
+	//void ExecuteAbility(); // Execute the ability
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Magic")
 	void CastManaBall();
@@ -181,6 +186,12 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Magic")
 	void CastTeleport();
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Abilities", meta = (AllowPrivateAccess = "true"))
+	bool bIsAbilityReady = false; // If the player can use the ability
+
+
+	void ExecuteTeleport();
+
 
 	void PlayAttackAnimation(); // Play the attack animation
 
@@ -189,8 +200,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	TArray<AMainSword*> AttachedSwords; // Sword class // MAY NEED TO REMOVE TO FIX THE DOUBLE ATTACK BUG
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Abilities", meta = (AllowPrivateAccess = "true"))
-	TEnumAsByte<EAbilityType>CurrentAbilityType;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Abilities", meta = (AllowPrivateAccess = "true"))
+	//TEnumAsByte<EAbilityType>CurrentAbilityType;
 
 
 	void ToggleMageMode(); // Toggle the mage mode
@@ -249,7 +260,6 @@ private:
 	float LastMageAttackTime = 0.f; // Last attack time for mage mode
 	float MageModeCooldowm = 2.f; // Switch speed for mage mode
 	bool bCanToggleMageMode = true; // If the player can toggle mage mode
-	bool bIsAbilityReady = false; // If the player can use the ability
 	FTimerHandle MageModeCooldownTimer; // Timer to cooldown the mage mode
 	FTimerHandle RegenManaTimer; // Timer to regen the mana will only use when not in mage mode
 

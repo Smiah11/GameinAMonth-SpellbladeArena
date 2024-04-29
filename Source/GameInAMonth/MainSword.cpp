@@ -76,6 +76,8 @@ void AMainSword::OnSwordOverlap(UPrimitiveComponent* HitComponent, AActor* Other
 
 	AController* OwnerController = UGameplayStatics::GetPlayerController(GetWorld(), 0); // Get the player controller
 
+	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0); // Get the player character
+
 
 
 	// Check if the owner controller is valid
@@ -97,6 +99,8 @@ void AMainSword::OnSwordOverlap(UPrimitiveComponent* HitComponent, AActor* Other
 	// Array of actors to ignore
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(this); // Add the sword to the array of actors to ignore
+
+	//ActorsToIgnore.Add(Cast<AActor>(PlayerCharacter)); // Add the player character to the array of actors to ignore had to cast to AActor because of the array
 	FHitResult BoxHit;
 
 
