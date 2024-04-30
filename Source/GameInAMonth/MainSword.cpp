@@ -2,6 +2,8 @@
 
 
 #include "MainSword.h"
+#include "GameFramework/Character.h"
+#include "GameInAMonthCharacter.h"
 #include <Kismet/GameplayStatics.h>
 
 // Sets default values
@@ -31,6 +33,11 @@ AMainSword::AMainSword()
 
 	TraceEnd = CreateDefaultSubobject<USceneComponent>(TEXT("TraceEnd"));
 	TraceEnd->SetupAttachment(RootComponent);
+
+
+	HitParticleComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("HitParticleComponent"));
+	HitParticleComponent->SetupAttachment(RootComponent);
+	
 
 	NewDamage = BaseDamage;
 
@@ -78,6 +85,8 @@ void AMainSword::OnSwordOverlap(UPrimitiveComponent* HitComponent, AActor* Other
 
 	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0); // Get the player character
 
+	AGameInAMonthCharacter* Player = Cast<AGameInAMonthCharacter>(PlayerCharacter); // Cast the player character to the player character class
+
 
 
 	// Check if the owner controller is valid
@@ -87,6 +96,12 @@ void AMainSword::OnSwordOverlap(UPrimitiveComponent* HitComponent, AActor* Other
 		UE_LOG(LogTemp, Warning, TEXT("No Owner Controller"))
 		return; // Return if the owner controller is not valid
 	
+	}
+
+	if (OtherActor == PlayerCharacter)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Hit Player"))
+		return;
 	}
 
 	//UE_LOG(LogTemp, Warning, TEXT("Hit %s"), *OtherActor->GetName());
@@ -99,21 +114,32 @@ void AMainSword::OnSwordOverlap(UPrimitiveComponent* HitComponent, AActor* Other
 	// Array of actors to ignore
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(this); // Add the sword to the array of actors to ignore
+	ActorsToIgnore.Add(PlayerCharacter); // Add the player character to the array of actors to ignore had to cast to AActor because of the array
 
+	
 	//ActorsToIgnore.Add(Cast<AActor>(PlayerCharacter)); // Add the player character to the array of actors to ignore had to cast to AActor because of the array
 	FHitResult BoxHit;
-
-
 	// Box Trace for debugging
 	UKismetSystemLibrary::BoxTraceSingle(GetWorld(), Start, End, FVector(5, 5, 5), TraceStart->GetComponentRotation(), ETraceTypeQuery::TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, BoxHit, true);
-
 
 	// Apply damage to the actor
 	UGameplayStatics::ApplyDamage(OtherActor, NewDamage, OwnerController, this, UDamageType::StaticClass());
 
 	bCanDamage = false;
 
-	// REMINDER -- Add the hit effect
+	if (HitParticleComponent)
+	{
+		HitParticleComponent->Activate();
+	}
+
+	if (HitSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
+	}
+
+
+	// HitSound
+
 
 
 }

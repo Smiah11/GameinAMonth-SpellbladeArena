@@ -32,14 +32,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	UAnimSequence* HitAnim;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Properties)
+	float Health = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Properties)
+	float MaxHealth = 100.f;
+
 
 private:
 
-	UPROPERTY(VisibleAnywhere, Category = Properties)
-	float Health = 100.f;
 
-	UPROPERTY(VisibleAnywhere, Category = Properties)
-	float MaxHealth = 100.f;
 
 	void HandleDeath();
 

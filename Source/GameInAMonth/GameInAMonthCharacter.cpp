@@ -38,7 +38,7 @@ AGameInAMonthCharacter::AGameInAMonthCharacter()
 	// instead of recompiling to adjust them
 	GetCharacterMovement()->JumpZVelocity = 700.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+	GetCharacterMovement()->MaxWalkSpeed = 600.f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
@@ -116,7 +116,9 @@ void AGameInAMonthCharacter::Tick(float DeltaTime)
 		// If the player is in mage mode, they can't attack
 		bCanAttack = false;
 
-		if (CurrentMana <= 20)
+		//UE_LOG(LogTemplateCharacter, Log, TEXT("CurrentMana: %f"), CurrentMana);
+
+		if (CurrentMana < 20)
 		{
 			bIsAbilityReady = false;
 
@@ -131,9 +133,10 @@ void AGameInAMonthCharacter::Tick(float DeltaTime)
 	else
 	{
 		bCanAttack = true;
-		GetWorldTimerManager().SetTimer(RegenManaTimer, this, &AGameInAMonthCharacter::RegenMana, 2.0f, true); //Regen stamina every 1 second
+
 
 	}
+	
 
 
 }
@@ -198,18 +201,22 @@ void AGameInAMonthCharacter::ToggleMageMode()
 
 		//AuraParticlesComponent->SetVisibility(bIsMageModeActive);
 		
-		if (bIsMageModeActive)
+		if (bIsMageModeActive) // If the player is in mage mode, activate the particles
 		{
 			AuraParticlesComponent->Activate();
 			WarriorAuraParticlesComponent->Deactivate();
 		}
-		else
+		else // If the player is not in mage mode, deactivate the particles and activate the warrior particles
 		{
 			AuraParticlesComponent->Deactivate();
 			WarriorAuraParticlesComponent->Activate();
 		}
 
 
+		if (!bIsMageModeActive) // If the player is not in mage mode, regen mana
+		{
+			GetWorldTimerManager().SetTimer(RegenManaTimer, this, &AGameInAMonthCharacter::RegenMana, 2.0f, true); //Regen Mana every 2 seconds
+		}
 
 
 		// Set the movement speed
@@ -220,6 +227,7 @@ void AGameInAMonthCharacter::ToggleMageMode()
 		bIsAbilityReady = true; // Set the ability to be ready
 
 		bCanToggleMageMode = false; // Set the ability to be on cooldown
+
 
 		GetWorldTimerManager().SetTimer(MageModeCooldownTimer, this, &AGameInAMonthCharacter::ResetMageModeToggle, MageModeCooldowm, false); //Reset the timer after 2 second
 
@@ -352,7 +360,12 @@ void AGameInAMonthCharacter::SetUpMageControls(UInputComponent* Input)
 		// MageMode
 		EnhancedInputComponent->BindAction(MageModeAction, ETriggerEvent::Triggered, this, &AGameInAMonthCharacter::ToggleMageMode);
 
-		EnhancedInputComponent->BindAction(TeleportAcivationAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::ExecuteTeleport);
+		EnhancedInputComponent->BindAction(TeleportAcivationAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::ExecuteTeleport); // Activate Teleport
+
+		EnhancedInputComponent->BindAction(AOEAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::ExecuteAOE); // Activate AOE
+
+		EnhancedInputComponent->BindAction(ManaBallAction, ETriggerEvent::Completed, this, &AGameInAMonthCharacter::ExecuteManaBall); // Activate Mana Ball
+
 		// Not using enhanced input for blocking as it is a hold action
 
 	}
@@ -494,11 +507,12 @@ void AGameInAMonthCharacter::ResetDodgeCooldown()
 
 void AGameInAMonthCharacter::HandleDamage(float Damage)
 {
+	UE_LOG(LogTemp, Warning, TEXT("TakingDamage: %f"), Damage);
 
 	CurrentHealth -= Damage; // Subtract the damage from the health
 	if (CurrentHealth <= 0) // Check if the health is less than or equal to 0
 	{
-		//HandleDeath(); // Call the death function issue with damage being applied due to weapon not ignoring/////////////////////
+		HandleDeath(); // Call the death function issue with damage being applied due to weapon not ignoring/////////////////////
 	}
 }
 
@@ -509,6 +523,11 @@ float AGameInAMonthCharacter::TakeDamage(float DamageAmount, FDamageEvent const&
 		DamageAmount *= BlockDamageReduction; // Reduce the damage by the block damage reduction
 	}
 
+	// ignore if its characters weapon
+	if (DamageCauser == this)
+	{
+		return 0.f;
+	}
 
 	HandleDamage(DamageAmount); // Call the handle damage function
 
@@ -638,7 +657,9 @@ void AGameInAMonthCharacter::RegenStamina()
 
 void AGameInAMonthCharacter::RegenMana()
 {
-		CurrentMana += 5.f; // Regen by 5
+
+	CurrentMana += 5.f; // Regen by 5
+	UE_LOG(LogTemplateCharacter, Log, TEXT("CurrentMana: %f"), CurrentMana);
 	CurrentMana = FMath::Clamp(CurrentMana, 0.f, MaxMana); // Clamp the mana
 
 	if (CurrentMana >= MaxMana)
@@ -666,9 +687,35 @@ void AGameInAMonthCharacter::ResetMageModeToggle()
 void AGameInAMonthCharacter::ExecuteTeleport()
 {
 	if (!bIsAbilityReady)
+	
+	{
 		return;
+	}
 
 	CastTeleport(); // Cast the teleport
+
+}
+
+void AGameInAMonthCharacter::ExecuteAOE()
+{
+	if (!bIsAbilityReady)
+	{
+		return;
+	}
+
+
+	CastAOE(); // Cast the AOE
+
+}
+
+void AGameInAMonthCharacter::ExecuteManaBall()
+{
+	if (!bIsAbilityReady)
+	{
+		return;
+	}
+
+	CastManaBall(); // Cast the mana ball
 
 }
 

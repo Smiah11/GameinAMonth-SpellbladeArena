@@ -5,7 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/BoxComponent.h"
-
+#include "Sound/SoundCue.h"
+#include "Particles/ParticleSystem.h"
 #include "MainSword.generated.h"
 
 UCLASS()
@@ -51,12 +52,20 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sword")
 	void OnSwordOverlap(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties")
-	UParticleSystem* HitEffect;
 
 
 	UFUNCTION(BlueprintCallable)
 	void SetCanDamage(bool CanDamage);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties")
+	USoundCue* HitSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties")
+	UParticleSystemComponent* HitParticleComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties")
+	UParticleSystem* HitParticle;
+
 
 
 private:

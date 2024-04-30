@@ -85,6 +85,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* TeleportAcivationAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* AOEAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ManaBallAction;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mage Mode", meta = (AllowPrivateAccess = "true"))
 	bool bIsMageModeActive = false;
@@ -208,7 +214,11 @@ protected:
 	bool bIsAbilityReady = false; // If the player can use the ability
 
 
-	void ExecuteTeleport();
+	void ExecuteTeleport(); // Execute the teleport ability
+
+	void ExecuteAOE(); // Execute the AOE ability
+
+	void ExecuteManaBall(); // Execute the mana ball ability
 
 
 	void PlayAttackAnimation(); // Play the attack animation
