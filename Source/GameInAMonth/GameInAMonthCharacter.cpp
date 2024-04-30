@@ -58,6 +58,12 @@ AGameInAMonthCharacter::AGameInAMonthCharacter()
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
 
+	//niagara
+	AuraParticlesComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("AuraParticlesComponent"));
+	AuraParticlesComponent->SetupAttachment(GetMesh());
+	AuraParticlesComponent->SetAsset(AuraParticles);
+	AuraParticlesComponent->SetAutoActivate(false);
+
 
 	// Set the default values for the character
 
@@ -101,12 +107,13 @@ void AGameInAMonthCharacter::Tick(float DeltaTime)
 
 	if (bIsMageModeActive)
 	{
-		// If the player is in mage mode, they can't attack or dodge
+		// If the player is in mage mode, they can't attack
 		bCanAttack = false;
 
 		if (CurrentMana <= 20)
 		{
 			bIsAbilityReady = false;
+
 		}
 		else
 		{
@@ -180,6 +187,21 @@ void AGameInAMonthCharacter::ToggleMageMode()
 		// Set the camera
 		//CameraBoom->TargetArmLength = bIsMageModeActive ? 500.f : 400.f;
 		FollowCamera->SetRelativeLocation(bIsMageModeActive ? FVector(280.f, 70.f, 60.f) : FVector(170.f, 110.f, 70.f));
+
+		GetMesh()->SetOverlayMaterial(bIsMageModeActive ? AuraMaterial : nullptr); // Set the material overlay
+
+
+		//AuraParticlesComponent->SetVisibility(bIsMageModeActive);
+		
+		if (bIsMageModeActive)
+		{
+			AuraParticlesComponent->Activate();
+		}
+		else
+		{
+			AuraParticlesComponent->Deactivate();
+		}
+
 
 
 

@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "MainSword.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
 #include "GameInAMonthCharacter.generated.h"
 
 class USpringArmComponent;
@@ -108,6 +110,14 @@ class AGameInAMonthCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
 	float MaxMana = 100.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
+	UMaterial* AuraMaterial; // overlay material for the player
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
+	UNiagaraSystem* AuraParticles; // particles for the player
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
+	UNiagaraComponent* AuraParticlesComponent;
 
 
 public:
