@@ -82,6 +82,8 @@ AGameInAMonthCharacter::AGameInAMonthCharacter()
 	ComboResetTime = 1.5f;
 
 
+	
+
 }
 
 
@@ -98,31 +100,21 @@ void AGameInAMonthCharacter::Tick(float DeltaTime)
 		FollowCamera->SetRelativeLocation(NewCamPos); // Set the new camera position
 	}
 
-	if (CurrentStamina <= 0)
-	{
-		// If the player has no stamina, they can't attack or dodge
-		bCanAttack = false;
-		bCanDodge = false;
-
-	}
-	else
-	{
-
 		// If the player has enough stamina, they can attack set to 5
-		bCanAttack = true;
+		//bCanAttack = true;
 
 		if (CurrentStamina >= DodgeStaminaCost)
 		{
 			// If the player has enough stamina, they can dodge
 			bCanDodge = true;
 		}
-	}
+	
 
 
 	if (bIsMageModeActive)
 	{
 		// If the player is in mage mode, they can't attack
-		bCanAttack = false;
+		
 
 		//UE_LOG(LogTemplateCharacter, Log, TEXT("CurrentMana: %f"), CurrentMana);
 
@@ -138,12 +130,7 @@ void AGameInAMonthCharacter::Tick(float DeltaTime)
 
 		GetWorldTimerManager().ClearTimer(RegenManaTimer);
 	}
-	else
-	{
-		bCanAttack = true;
 
-
-	}
 	
 
 
@@ -153,6 +140,8 @@ void AGameInAMonthCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+
+	bCanAttack = true;
 
 	//Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -203,6 +192,9 @@ void AGameInAMonthCharacter::ToggleMageMode()
 
 		// Set the camera
 		//CameraBoom->TargetArmLength = bIsMageModeActive ? 500.f : 400.f;
+
+	
+		bCanAttack = bIsMageModeActive ? false : true; // If the player is in mage mode, they can't attack
 
 
 		TargetCameraPosition = (bIsMageModeActive ? FVector(280.f, 70.f, 60.f) : FVector(170.f, 110.f, 70.f)); // Set the camera position gonna be done in tick to lerp
@@ -550,8 +542,9 @@ void AGameInAMonthCharacter::HandleStamina(float StaminaCost)
 	//UE_LOG(LogTemp, Warning, TEXT("Handling Stamina"))
 
 		CurrentStamina -= StaminaCost; // Subtract the stamina cost from the stamina
-	if (CurrentStamina <= 0) // Check if the stamina is less than or equal to 0
+	if (CurrentStamina < 5) // Check if the stamina is less than or equal to 0
 	{
+		bCanAttack = false; // Set the can attack flag to false
 		UE_LOG(LogTemp, Warning, TEXT("Out of Stamina"))
 	}
 }
@@ -655,14 +648,20 @@ void AGameInAMonthCharacter::DrainStamina()
 void AGameInAMonthCharacter::RegenStamina()
 {
 
-	CurrentStamina += 5.f; // Regen by 2
-	CurrentStamina = FMath::Clamp(CurrentStamina, 0.f, MaxStamina); // Clamp the stamina
+	CurrentStamina += 2; // Regen by 2
+	CurrentStamina = FMath::Clamp(CurrentStamina, 0, MaxStamina); // Clamp the stamina
 	UE_LOG(LogTemp, Warning, TEXT("Stamina: %f"), CurrentStamina)
 
 		if (CurrentStamina >= MaxStamina)
 		{
 			CurrentStamina = MaxStamina; // Set the stamina to the max stamina
 		}
+
+
+	if (CurrentStamina >=5)
+	{
+		bCanAttack = true; // Set the can attack flag to true
+	}
 }
 
 void AGameInAMonthCharacter::RegenMana()
