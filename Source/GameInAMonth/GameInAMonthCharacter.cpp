@@ -58,12 +58,18 @@ AGameInAMonthCharacter::AGameInAMonthCharacter()
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
 
-	//niagara
+	//niagara for MageAura
 	AuraParticlesComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("AuraParticlesComponent"));
 	AuraParticlesComponent->SetupAttachment(GetMesh());
-	AuraParticlesComponent->SetAsset(AuraParticles);
 	AuraParticlesComponent->SetAutoActivate(false);
 
+	//niagara for WarriorAura
+	WarriorAuraParticlesComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("WarriorAuraParticlesComponent"));
+	WarriorAuraParticlesComponent->SetupAttachment(GetMesh());
+	WarriorAuraParticlesComponent->SetAutoActivate(true);
+
+
+	GetMesh()->SetOverlayMaterial(WarriorMaterial);
 
 	// Set the default values for the character
 
@@ -188,25 +194,26 @@ void AGameInAMonthCharacter::ToggleMageMode()
 		//CameraBoom->TargetArmLength = bIsMageModeActive ? 500.f : 400.f;
 		FollowCamera->SetRelativeLocation(bIsMageModeActive ? FVector(280.f, 70.f, 60.f) : FVector(170.f, 110.f, 70.f));
 
-		GetMesh()->SetOverlayMaterial(bIsMageModeActive ? AuraMaterial : nullptr); // Set the material overlay
-
+		GetMesh()->SetOverlayMaterial(bIsMageModeActive ? AuraMaterial : WarriorMaterial); // Set the material overlay
 
 		//AuraParticlesComponent->SetVisibility(bIsMageModeActive);
 		
 		if (bIsMageModeActive)
 		{
 			AuraParticlesComponent->Activate();
+			WarriorAuraParticlesComponent->Deactivate();
 		}
 		else
 		{
 			AuraParticlesComponent->Deactivate();
+			WarriorAuraParticlesComponent->Activate();
 		}
 
 
 
 
 		// Set the movement speed
-		GetCharacterMovement()->MaxWalkSpeed = bIsMageModeActive ? 800.f : 500.f;
+		GetCharacterMovement()->MaxWalkSpeed = bIsMageModeActive ? 800.f : 600.f;
 
 		AdjustInput(); // Adjust the input bindings BASED ON the mode
 
@@ -588,16 +595,19 @@ void AGameInAMonthCharacter::Block()
 		bIsBlocking = true; // Set the flag to true
 		//PlayAnimMontage(BlockAnimation); // Play the block animation
 		//HandleStamina(10.f); // Subtract 10 stamina for blocking will be used for parrying
+		GetCharacterMovement()->MaxWalkSpeed = 200.f; // Set the max walk speed to 200
 
 		GetWorldTimerManager().SetTimer(StaminaDrainTimer, this, &AGameInAMonthCharacter::DrainStamina, 1.f, true); // Set a timer to drain the stamina
 
 	}
+
 
 }
 
 void AGameInAMonthCharacter::StopBlock()
 {
 	bIsBlocking = false; // Set the flag to false;
+	GetCharacterMovement()->MaxWalkSpeed = 600.f; // Set the max walk speed to 600
 	//StopAnimMontage(BlockAnimation); // Stop the block animation
 	GetWorldTimerManager().ClearTimer(StaminaDrainTimer); // Clear the stamina drain timer
 }

@@ -34,6 +34,9 @@ class AGameInAMonthCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+
+
+public:
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
@@ -119,6 +122,11 @@ class AGameInAMonthCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
 	UNiagaraComponent* AuraParticlesComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
+	UMaterial* WarriorMaterial; // overlay material for the player
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivate))
+	UNiagaraComponent* WarriorAuraParticlesComponent;
 
 public:
 	AGameInAMonthCharacter();
