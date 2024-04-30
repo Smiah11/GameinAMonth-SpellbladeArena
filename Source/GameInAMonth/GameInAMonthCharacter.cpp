@@ -53,6 +53,7 @@ AGameInAMonthCharacter::AGameInAMonthCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	TargetCameraPosition = FVector(170.f, 110.f, 70.f);
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
@@ -89,6 +90,13 @@ void AGameInAMonthCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+
+
+	if (!FollowCamera->GetRelativeLocation().Equals(TargetCameraPosition), 0.1f) // If the camera is not at the target position
+	{
+		FVector NewCamPos = FMath::Lerp(FollowCamera->GetRelativeLocation(), TargetCameraPosition, DeltaTime* CameraLerpSpeed); // Lerp the camera to the target position
+		FollowCamera->SetRelativeLocation(NewCamPos); // Set the new camera position
+	}
 
 	if (CurrentStamina <= 0)
 	{
@@ -195,7 +203,9 @@ void AGameInAMonthCharacter::ToggleMageMode()
 
 		// Set the camera
 		//CameraBoom->TargetArmLength = bIsMageModeActive ? 500.f : 400.f;
-		FollowCamera->SetRelativeLocation(bIsMageModeActive ? FVector(280.f, 70.f, 60.f) : FVector(170.f, 110.f, 70.f));
+
+
+		TargetCameraPosition = (bIsMageModeActive ? FVector(280.f, 70.f, 60.f) : FVector(170.f, 110.f, 70.f)); // Set the camera position gonna be done in tick to lerp
 
 		GetMesh()->SetOverlayMaterial(bIsMageModeActive ? AuraMaterial : WarriorMaterial); // Set the material overlay
 
