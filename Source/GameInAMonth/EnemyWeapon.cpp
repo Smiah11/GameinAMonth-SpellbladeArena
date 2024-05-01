@@ -1,17 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "MainSword.h"
-#include "GameFramework/Character.h"
-#include "GameInAMonthCharacter.h"
+#include "EnemyWeapon.h"
+#include "EnemyAIController.h"
+#include "Particles/ParticleSystemComponent.h"
 #include <Kismet/GameplayStatics.h>
 
 // Sets default values
-AMainSword::AMainSword()
+AEnemyWeapon::AEnemyWeapon()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 
 	SwordMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SwordMesh"));
 	RootComponent = SwordMesh;
@@ -22,7 +21,7 @@ AMainSword::AMainSword()
 
 	// Set up the collision 
 
-	BoxCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	BoxCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Set the collision to no collision anim notify will set it to query only******
 	//BoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	BoxCollision->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
 	BoxCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
@@ -38,56 +37,46 @@ AMainSword::AMainSword()
 	HitParticleComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("HitParticleComponent"));
 	HitParticleComponent->SetupAttachment(RootComponent);
 
-
 	NewDamage = BaseDamage;
-
 }
 
 // Called when the game starts or when spawned
-void AMainSword::BeginPlay()
+void AEnemyWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
-	BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &AMainSword::OnSwordOverlap);
-
+	BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &AEnemyWeapon::OnWeaponOverlap);
+	
 }
 
 // Called every frame
-void AMainSword::Tick(float DeltaTime)
+void AEnemyWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
-
-void AMainSword::PerformAttack(float Damage)
+void AEnemyWeapon::PerformAttack(float Damage)
 {
-	NewDamage = Damage;
+	Damage = NewDamage;
 }
 
-void AMainSword::SetCanDamage(bool CanDamage)
+void AEnemyWeapon::OnWeaponOverlap(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	bCanDamage = CanDamage;
-}
-
-void AMainSword::OnSwordOverlap(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	//UE_LOG(LogTemp, Warning, TEXT("oVERLAPPING"))
 
 	if (!bCanDamage || !OtherActor || OtherActor == GetOwner())
 	{
 
-		UE_LOG(LogTemp, Warning, TEXT("Early Return"));
+		UE_LOG(LogTemp, Warning, TEXT("wEAPON AHHHH"));
 		return;
 	}
 
-	AController* OwnerController = UGameplayStatics::GetPlayerController(GetWorld(), 0); // Get the player controller
 
-	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0); // Get the player character
+	UE_LOG(LogTemp, Warning, TEXT("OnWeaponOverlap"));
 
-	AGameInAMonthCharacter* Player = Cast<AGameInAMonthCharacter>(PlayerCharacter); // Cast the player character to the player character class
+	APawn* OwnerPawn = Cast<APawn>(GetOwner()); // Get the pawn first so we can get the controller
 
-
+	AEnemyAIController* OwnerController = Cast<AEnemyAIController>(OwnerPawn->GetController()); // Get the owner controller of the sword
 
 	// Check if the owner controller is valid
 	if (!OwnerController)
@@ -96,12 +85,6 @@ void AMainSword::OnSwordOverlap(UPrimitiveComponent* HitComponent, AActor* Other
 		UE_LOG(LogTemp, Warning, TEXT("No Owner Controller"))
 			return; // Return if the owner controller is not valid
 
-	}
-
-	if (OtherActor == PlayerCharacter)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Hit Player"))
-			return;
 	}
 
 	//UE_LOG(LogTemp, Warning, TEXT("Hit %s"), *OtherActor->GetName());
@@ -114,19 +97,16 @@ void AMainSword::OnSwordOverlap(UPrimitiveComponent* HitComponent, AActor* Other
 	// Array of actors to ignore
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(this); // Add the sword to the array of actors to ignore
-	ActorsToIgnore.Add(PlayerCharacter); // Add the player character to the array of actors to ignore had to cast to AActor because of the array
-
-
-	//ActorsToIgnore.Add(Cast<AActor>(PlayerCharacter)); // Add the player character to the array of actors to ignore had to cast to AActor because of the array
+	
 	FHitResult BoxHit;
+	// Box Trace for debugging
+	UKismetSystemLibrary::BoxTraceSingle(GetWorld(), Start, End, FVector(5, 5, 5), TraceStart->GetComponentRotation(), ETraceTypeQuery::TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, BoxHit, true);
 
-	if (OtherActor->ActorHasTag("Enemy"))
+
+	if (OtherActor->ActorHasTag("Player"))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Hit Player Character"));
 
-		// Box Trace for debugging
-		UKismetSystemLibrary::BoxTraceSingle(GetWorld(), Start, End, FVector(5, 5, 5), TraceStart->GetComponentRotation(), ETraceTypeQuery::TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, BoxHit, true);
-
-		// Apply damage to the actor
 		UGameplayStatics::ApplyDamage(OtherActor, NewDamage, OwnerController, this, UDamageType::StaticClass());
 
 		bCanDamage = false;
@@ -142,11 +122,11 @@ void AMainSword::OnSwordOverlap(UPrimitiveComponent* HitComponent, AActor* Other
 		}
 	}
 
+}
 
-	// HitSound
-
-
-
+void AEnemyWeapon::SetCanDamage(bool CanDamage)
+{
+		bCanDamage = CanDamage;
 }
 
 

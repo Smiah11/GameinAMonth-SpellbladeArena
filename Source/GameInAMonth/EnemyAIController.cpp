@@ -7,6 +7,7 @@
 #include "Animation/AnimMontage.h"
 #include "Animation/AnimInstance.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "EnemyWeapon.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -14,7 +15,9 @@ AEnemyAIController::AEnemyAIController()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	bIsInterruptable = false;
+	bIsInterruptable = false; // Set the AI to not be interruptable
+
+	//bCanAttack = true; // Set the AI to be able to attack
 }
 
 void AEnemyAIController::BeginPlay()
@@ -24,6 +27,26 @@ void AEnemyAIController::BeginPlay()
 	if (BehaviorTree)
 	{
 		RunBehaviorTree(BehaviorTree);
+	}
+
+
+	ACharacter* EnemyCharacter = Cast<ACharacter>(GetPawn()); // Get the character
+	TArray<AActor*> AttachedComponents;
+	EnemyCharacter->GetAttachedActors(AttachedComponents); // Get the attached components
+
+	for (AActor* Component : AttachedComponents)
+	{
+		AEnemyWeapon* Weapon = Cast<AEnemyWeapon>(Component);
+
+		if (Weapon)
+		{
+
+			Weapon->SetOwner(EnemyCharacter); // Set the owner
+			EnemyWeapon = Weapon; // Set the weapon
+			EnemyWeapon->NewDamage = Damage; // Set the damage
+			
+		}
+
 	}
 
 }
@@ -65,12 +88,13 @@ void AEnemyAIController::MoveToPlayer()
 
 void AEnemyAIController::LightAttack()
 {
-
+	
 	if (!bCanAttack)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Cannot Attack"))
 			return;
 	}
+	
 
 	//GetBlackboardComponent()->SetValueAsInt("bIsAttacking", 1); // set the blackboard value to true
 
@@ -97,11 +121,14 @@ void AEnemyAIController::LightAttack()
 
 void AEnemyAIController::HeavyAttack()
 {
+
+	
 	if (!bCanAttack)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Cannot Attack"))
 			return;
 	}
+	
 
 	bIsHeavyAttacking = true; // Set the AI to heavy attack
 
@@ -293,10 +320,10 @@ bool AEnemyAIController::CheckForInterruption(float InterruptionChance)
 void AEnemyAIController::Attack()
 {
 
-	if (!bCanAttack) // If the AI cannot attack
+
+	if (EnemyWeapon)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Cannot Attack"))
-			return;
+		EnemyWeapon->SetCanDamage(true); // Set the weapon to be able to damage
 	}
 
 	int AttackType = FMath::RandRange(0, 1); // Generate a random number between 0 and 100
@@ -309,6 +336,7 @@ void AEnemyAIController::Attack()
 	{
 		HeavyAttack(); // Set the AI to light attack
 	}
+
 
 	
 }

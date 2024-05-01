@@ -154,10 +154,10 @@ void AGameInAMonthCharacter::BeginPlay()
 
 	//Find the attached swords
 
-	TArray<USceneComponent*> AttachedComponents;
-	GetMesh()->GetChildrenComponents(true, AttachedComponents);
+	TArray<AActor*> AttachedComponents;
+	this->GetAttachedActors(AttachedComponents); // Get all the attached Actors to this character
 
-	for (USceneComponent* Component : AttachedComponents)
+	for (AActor* Component : AttachedComponents)
 	{
 		AMainSword* Sword = Cast<AMainSword>(Component->GetOwner());
 		if (Sword)
@@ -165,15 +165,14 @@ void AGameInAMonthCharacter::BeginPlay()
 			AttachedSwords.Add(Sword);
 
 			// set the properties that i want
-
+			Sword->SetOwner(this);
 			AttackCooldown = Sword->AttackSpeed;
 			BaseDamage = Sword->NewDamage;
+			
 
 
 		}
 	}
-
-
 
 	GetWorldTimerManager().SetTimer(RegenStaminaTimer, this, &AGameInAMonthCharacter::RegenStamina, 2.0f, true); //Regen stamina every 1 second
 }

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EnemyWeapon.h"
 #include "AIController.h"
 
 #include "EnemyAIController.generated.h"
@@ -61,7 +62,10 @@ public:
 		bool CheckForInterruption(float InterruptionChance); // Check if the enemy should be interrupted
 
 
+		AEnemyWeapon* EnemyWeapon;
 
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+		float Damage = 10.f;
 
 
 		UPROPERTY(EditDefaultsOnly, Category = "AI")
