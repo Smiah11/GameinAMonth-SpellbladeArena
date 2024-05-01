@@ -276,7 +276,7 @@ private:
 	float AttackStaminaCost = 5.f; // Stamina cost for attacking
 	float BaseDamage;
 	float DamageMultiplier = 1.f; // Damage multiplier
-	float AttackCooldown; // Attack cooldown
+	float AttackCooldown = 0.8f; // Attack cooldown
 	float LastAttackTime = 0.f; // Last attack time
 	bool bCanAttack = true; // If the player can attack
 
@@ -329,6 +329,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivate))
 	UAnimMontage* BlockAnimation; // Block Montage
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivate))
+	UAnimSequence* TransitionAnim; // UnBlock Montage
 
 };
 

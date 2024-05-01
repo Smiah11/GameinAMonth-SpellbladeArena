@@ -120,9 +120,6 @@ void AMainSword::OnSwordOverlap(UPrimitiveComponent* HitComponent, AActor* Other
 	//ActorsToIgnore.Add(Cast<AActor>(PlayerCharacter)); // Add the player character to the array of actors to ignore had to cast to AActor because of the array
 	FHitResult BoxHit;
 
-	if (OtherActor->ActorHasTag("Enemy"))
-	{
-
 		// Box Trace for debugging
 		UKismetSystemLibrary::BoxTraceSingle(GetWorld(), Start, End, FVector(5, 5, 5), TraceStart->GetComponentRotation(), ETraceTypeQuery::TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, BoxHit, true);
 
@@ -140,7 +137,7 @@ void AMainSword::OnSwordOverlap(UPrimitiveComponent* HitComponent, AActor* Other
 		{
 			UGameplayStatics::PlaySoundAtLocation(this, HitSound, GetActorLocation());
 		}
-	}
+	
 
 
 	// HitSound

@@ -154,10 +154,11 @@ void AGameInAMonthCharacter::BeginPlay()
 
 	//Find the attached swords
 
-	TArray<AActor*> AttachedComponents;
-	this->GetAttachedActors(AttachedComponents); // Get all the attached Actors to this character
+	// Actor method didnt work???
+	TArray<USceneComponent*> AttachedComponents;
+	GetMesh()->GetChildrenComponents(true, AttachedComponents);
 
-	for (AActor* Component : AttachedComponents)
+	for (USceneComponent* Component : AttachedComponents)
 	{
 		AMainSword* Sword = Cast<AMainSword>(Component->GetOwner());
 		if (Sword)
@@ -165,14 +166,14 @@ void AGameInAMonthCharacter::BeginPlay()
 			AttachedSwords.Add(Sword);
 
 			// set the properties that i want
-			Sword->SetOwner(this);
 			AttackCooldown = Sword->AttackSpeed;
 			BaseDamage = Sword->NewDamage;
-			
 
 
 		}
 	}
+
+
 
 	GetWorldTimerManager().SetTimer(RegenStaminaTimer, this, &AGameInAMonthCharacter::RegenStamina, 2.0f, true); //Regen stamina every 1 second
 }
@@ -191,6 +192,15 @@ void AGameInAMonthCharacter::ToggleMageMode()
 
 		// Set the camera
 		//CameraBoom->TargetArmLength = bIsMageModeActive ? 500.f : 400.f;
+
+
+		UAnimMontage* TransitionMontage = UAnimMontage::CreateSlotAnimationAsDynamicMontage(TransitionAnim, "DefaultSlot");
+
+		if (TransitionMontage)
+		{
+			PlayAnimMontage(TransitionMontage);
+		}
+		
 
 	
 		bCanAttack = bIsMageModeActive ? false : true; // If the player is in mage mode, they can't attack
@@ -213,10 +223,21 @@ void AGameInAMonthCharacter::ToggleMageMode()
 			WarriorAuraParticlesComponent->Activate();
 		}
 
+		if (bIsMageModeActive)
+		{
+			StopBlock();
+		}
+
 
 		if (!bIsMageModeActive) // If the player is not in mage mode, regen mana
 		{
 			GetWorldTimerManager().SetTimer(RegenManaTimer, this, &AGameInAMonthCharacter::RegenMana, 2.0f, true); //Regen Mana every 2 seconds
+		}
+
+		// make swords invisible
+		for (AMainSword* Sword : AttachedSwords)
+		{
+			Sword->SetActorHiddenInGame(bIsMageModeActive);
 		}
 
 
@@ -642,6 +663,8 @@ void AGameInAMonthCharacter::StopBlock()
 
 void AGameInAMonthCharacter::DrainStamina()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Draining Stamina"))
+
 	HandleStamina(BlockStaminaDrainRate); // Drain the stamina
 
 	if (CurrentStamina <= 0)
