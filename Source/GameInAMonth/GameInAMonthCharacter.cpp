@@ -552,9 +552,15 @@ void AGameInAMonthCharacter::HandleStamina(float StaminaCost)
 void AGameInAMonthCharacter::Attack()
 {
 
-	if (!bCanAttack)
+	if (!bCanAttack) // Check if the player can attack
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Cannot Attack"))
+			return;
+	}
+
+	if (bIsBlocking) // Check if the player is blocking before attacking
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Cannot Attack while Blocking"))
 			return;
 	}
 
@@ -615,6 +621,7 @@ void AGameInAMonthCharacter::Block()
 	if (CurrentStamina > 0)
 	{
 		bIsBlocking = true; // Set the flag to true
+
 		//PlayAnimMontage(BlockAnimation); // Play the block animation
 		//HandleStamina(10.f); // Subtract 10 stamina for blocking will be used for parrying
 		GetCharacterMovement()->MaxWalkSpeed = 200.f; // Set the max walk speed to 200
@@ -794,6 +801,16 @@ void AGameInAMonthCharacter::PlayAttackAnimation()
 
 void AGameInAMonthCharacter::ResetPlayer()
 {
+	CurrentHealth = MaxHealth; // Set the health to the max health
+	CurrentStamina = MaxStamina; // Set the stamina to the max stamina
+	CurrentMana = MaxMana; // Set the mana to the max mana
+	ComboCounter = 0; // Reset the combo counter
+	bIsBlocking = false; // Set the block flag to false
+	bCanAttack = true; // Set the can attack flag to true
+	bCanToggleMageMode = true; // Set the can toggle mage mode flag to true
+	bIsAbilityReady = true; // Set the ability ready flag to true
+
+
 }
 
 void AGameInAMonthCharacter::ApplyPowerup()
