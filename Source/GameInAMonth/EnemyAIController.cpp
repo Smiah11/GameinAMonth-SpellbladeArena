@@ -335,6 +335,19 @@ void AEnemyAIController::NotifyDamageTaken()
 	bIsTakingDamage = true;
 }
 
+void AEnemyAIController::SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled)
+{
+
+	if (EnemyWeapon)
+	{
+
+		UE_LOG(LogTemp, Warning, TEXT("collsion enable"));
+		EnemyWeapon->BoxCollision->SetCollisionEnabled(CollisionEnabled); // Set the collision of the sword
+	}
+	
+
+}
+
 void AEnemyAIController::Attack()
 {
 	float AttackCooldown = FMath::RandRange(0.5f, 2.f);// Set the AI to attack speed to be a bit random 

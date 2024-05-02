@@ -134,6 +134,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivate))
 	UAnimSequence* InterruptAnim; // Interrup Animation
 
+	UFUNCTION(BlueprintCallable)
+	void SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled); // Set the weapon collision enabled
+
 
 private:
 
