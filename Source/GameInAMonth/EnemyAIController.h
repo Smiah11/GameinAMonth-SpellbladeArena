@@ -91,6 +91,10 @@ public:
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 		bool bCanAttack = true;
 
+		 
+		bool bIsTakingDamage = false; // Check if the enemy is taking damage
+
+		void NotifyDamageTaken();
 
 
 
@@ -135,10 +139,12 @@ private:
 
 	float ComboResetTime = 10.f; // Time before combo resets
 	int ComboCounter = 0;
-	FTimerHandle ComboTimerHandle;
+	FTimerHandle ComboTimerHandle; // Timer for combo reset
 
-	FTimerHandle InterruptTimerHandle;
+	FTimerHandle InterruptTimerHandle; // Timer for interruption
 
+
+	float LastAttackTime; // Time of last attack
 
 
 	

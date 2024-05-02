@@ -142,6 +142,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivate))
 	UNiagaraComponent* WarriorAuraParticlesComponent;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
+	UNiagaraSystem* MageParticles; // particles for the player
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties", meta = (AllowPrivateAccess = "true"))
+	UNiagaraSystem* WarriorParticles; // particles for the player	
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void EnableMageWidget();
+
 public:
 	AGameInAMonthCharacter();
 

@@ -13,6 +13,7 @@
 #include "Animation/AnimInstance.h"
 #include "GameFramework/Character.h"
 #include "MainSword.h"
+#include <NiagaraFunctionLibrary.h>
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -109,8 +110,6 @@ void AGameInAMonthCharacter::Tick(float DeltaTime)
 			bCanDodge = true;
 		}
 	
-
-
 	if (bIsMageModeActive)
 	{
 		// If the player is in mage mode, they can't attack
@@ -208,6 +207,10 @@ void AGameInAMonthCharacter::ToggleMageMode()
 
 		TargetCameraPosition = (bIsMageModeActive ? FVector(280.f, 70.f, 60.f) : FVector(170.f, 110.f, 70.f)); // Set the camera position gonna be done in tick to lerp
 
+
+		//activate a niagara system at the actor location
+	
+
 		GetMesh()->SetOverlayMaterial(bIsMageModeActive ? AuraMaterial : WarriorMaterial); // Set the material overlay
 
 		//AuraParticlesComponent->SetVisibility(bIsMageModeActive);
@@ -216,11 +219,16 @@ void AGameInAMonthCharacter::ToggleMageMode()
 		{
 			AuraParticlesComponent->Activate();
 			WarriorAuraParticlesComponent->Deactivate();
+
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), WarriorParticles, GetActorLocation(), FRotator::ZeroRotator, FVector(1.f), true, true, ENCPoolMethod::AutoRelease, true);
+			EnableMageWidget();// Enable the mage widget
 		}
 		else // If the player is not in mage mode, deactivate the particles and activate the warrior particles
 		{
 			AuraParticlesComponent->Deactivate();
 			WarriorAuraParticlesComponent->Activate();
+
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), MageParticles, GetActorLocation(), FRotator::ZeroRotator, FVector(1.f), true, true, ENCPoolMethod::AutoRelease, true);
 		}
 
 		if (bIsMageModeActive)

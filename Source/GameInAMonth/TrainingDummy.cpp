@@ -2,6 +2,7 @@
 
 
 #include "TrainingDummy.h"
+#include "EnemyAIController.h"
 
 // Sets default values
 ATrainingDummy::ATrainingDummy()
@@ -44,9 +45,10 @@ float ATrainingDummy::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 
 	UE_LOG(LogTemp, Warning, TEXT("Health: %f"), Health);
 
-	if (Montage1)
+
+	if (DamageApplied > 0)
 	{
-		PlayAnimMontage(Montage1);
+		Cast<AEnemyAIController>(GetController())->NotifyDamageTaken();
 	}
 
 	if (Health <= 0)

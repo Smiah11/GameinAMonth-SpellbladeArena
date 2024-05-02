@@ -29,6 +29,9 @@ void AEnemyAIController::BeginPlay()
 		RunBehaviorTree(BehaviorTree);
 	}
 
+	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0); // Get the player character
+
+	GetBlackboardComponent()->SetValueAsObject("Target Actor", PlayerCharacter); // set the player as the target actor in the blackboard 
 
 	ACharacter* EnemyCharacter = Cast<ACharacter>(GetPawn()); // Get the character
 	TArray<AActor*> AttachedComponents;
@@ -63,9 +66,9 @@ void AEnemyAIController::MoveToPlayer()
 		return;
 	}
 
-	GetBlackboardComponent()->SetValueAsObject("Target Actor", PlayerCharacter); // set the player as the target actor in the blackboard 
 
-	float AcceptanceRadius = 200.f; // set the acceptance radius to 0
+
+	float AcceptanceRadius = 120; // set the acceptance radius to 0
 
 	// get the player location
 	FVector PlayerLocation = PlayerCharacter->GetActorLocation();
@@ -105,14 +108,14 @@ void AEnemyAIController::LightAttack()
 	{
 		ComboCounter++; // Increment the combo counter
 		PlayLightAttackAnimations(); // Play the attack animation
-		UE_LOG(LogTemp, Warning, TEXT("Combo Counter: %d"), ComboCounter)
+		UE_LOG(LogTemp, Warning, TEXT("Light attack Combo Counter: %d"), ComboCounter)
 
 	}
 	else
 	{
 
 		ComboCheck(); // Check the combo
-		UE_LOG(LogTemp, Warning, TEXT("Combo Counter: %d"), ComboCounter); // Log the combo counter
+		UE_LOG(LogTemp, Warning, TEXT("Light Attack Combo Counter: %d"), ComboCounter); // Log the combo counter
 	}
 
 	GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &AEnemyAIController::ResetCombo, ComboResetTime, false); // Set a timer to reset the combo counter 
@@ -137,14 +140,14 @@ void AEnemyAIController::HeavyAttack()
 	{
 		ComboCounter++; // Increment the combo counter
 		PlayHeavyAttackAnimations(); // Play the attack animation
-		UE_LOG(LogTemp, Warning, TEXT("Combo Counter: %d"), ComboCounter)
+		UE_LOG(LogTemp, Warning, TEXT("Heavy attack Combo Counter: %d"), ComboCounter)
 
 	}
 	else
 	{
 
 		ComboCheck(); // Check the combo
-		UE_LOG(LogTemp, Warning, TEXT("Combo Counter: %d"), ComboCounter); // Log the combo counter
+		UE_LOG(LogTemp, Warning, TEXT("Heavy Attack Combo Counter: %d"), ComboCounter); // Log the combo counter
 	}
 
 	GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &AEnemyAIController::ResetCombo, ComboResetTime, false); // Set a timer to reset the combo counter 
@@ -207,12 +210,7 @@ void AEnemyAIController::PlayHeavyAttackAnimations()
 		
 	}
 
-	float InterruptionChance = 25.f;
 
-	if (CheckForInterruption(InterruptionChance))
-	{
-		bIsInterruptable = true;
-	}
 
 
 
@@ -297,6 +295,10 @@ void AEnemyAIController::Interrupt()
 		UE_LOG(LogTemp, Warning, TEXT("Cannot Interrupt"))
 			return;
 	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Interrupting"))
+	}
 
 	UAnimMontage* InterruptMontage = UAnimMontage::CreateSlotAnimationAsDynamicMontage(InterruptAnim, "DefaultSlot"); // Create a dynamic montage from the slot animation
 	auto EnemyCharacter = Cast<ACharacter>(GetPawn()); // Get the character
@@ -314,11 +316,55 @@ void AEnemyAIController::Interrupt()
 bool AEnemyAIController::CheckForInterruption(float InterruptionChance)
 {
 	float RandomNumber = FMath::RandRange(0.f, 100.f); // Generate a random number between 0 and 100
+
+	if (RandomNumber < InterruptionChance)
+	{
+		bIsInterruptable = true;
+	}
+	else
+	{
+		bIsInterruptable = false;
+
+	}
+
 	return RandomNumber < InterruptionChance; // Return true if the random number is less than the interruption chance
+}
+
+void AEnemyAIController::NotifyDamageTaken()
+{
+	bIsTakingDamage = true;
 }
 
 void AEnemyAIController::Attack()
 {
+	float AttackCooldown = FMath::RandRange(0.5f, 2.f);// Set the AI to attack speed to be a bit random 
+
+	float CurrentTime = GetWorld()->GetTimeSeconds(); // Get the current time
+
+	UE_LOG(LogTemp, Warning, TEXT("Attack Called"))
+
+	// This sets up the attack cool down so i wont have to keep using a wait node in the behaviour tree
+	if (CurrentTime - LastAttackTime < AttackCooldown) // Check if the current time is less than the attack cooldown
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Attack on Cooldown"))
+		return; // Return if the attack is on cooldown
+	}
+
+	LastAttackTime = CurrentTime; // Set the last attack time to the current time
+
+
+	float InterruptionChance = 10.f;// Chance to be interrupted
+
+	CheckForInterruption(InterruptionChance);// Check if the AI can be interrupted
+
+	// if the character takes damage whilst interrruptable then call interrupt
+
+	if (bIsInterruptable && bIsTakingDamage)
+	{
+		Interrupt();
+		return;
+	}
+
 
 
 	if (EnemyWeapon)
