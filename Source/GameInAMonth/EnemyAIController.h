@@ -49,6 +49,9 @@ public:
 
 
 
+		FTimerHandle DelayedInitialisationTimer;
+		void DelayedInitialisation();
+
 		void ResetAttack();
 
 
@@ -62,6 +65,7 @@ public:
 		bool CheckForInterruption(float InterruptionChance); // Check if the enemy should be interrupted
 
 
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 		AEnemyWeapon* EnemyWeapon;
 
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")

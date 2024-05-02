@@ -31,12 +31,31 @@ void AEnemyAIController::BeginPlay()
 
 	ACharacter* PlayerCharacter = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0); // Get the player character
 
+	if (!PlayerCharacter)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Player Character Not Found"))
+		return;
+	}
+
 	GetBlackboardComponent()->SetValueAsObject("Target Actor", PlayerCharacter); // set the player as the target actor in the blackboard 
 
+
 	ACharacter* EnemyCharacter = Cast<ACharacter>(GetPawn()); // Get the character
+	if (!EnemyCharacter)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Enemy Character Not Found"));
+
+		GetWorld()->GetTimerManager().SetTimer(DelayedInitialisationTimer, this, &AEnemyAIController::DelayedInitialisation, 0.5f, false); // Call the delayed initialisation
+
+		return;
+	}
+
 	TArray<AActor*> AttachedComponents;
 	EnemyCharacter->GetAttachedActors(AttachedComponents); // Get the attached components
 
+	UE_LOG(LogTemp, Warning, TEXT("Attached Components: %d"), AttachedComponents.Num())
+
+	
 	for (AActor* Component : AttachedComponents)
 	{
 		AEnemyWeapon* Weapon = Cast<AEnemyWeapon>(Component);
@@ -45,15 +64,59 @@ void AEnemyAIController::BeginPlay()
 		{
 
 			Weapon->SetOwner(EnemyCharacter); // Set the owner
+			Weapon->NewDamage = Damage; // Set the damage
 			EnemyWeapon = Weapon; // Set the weapon
-			EnemyWeapon->NewDamage = Damage; // Set the damage
 			
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Weapon Not Found"))
 		}
 
 	}
 
+	if (EnemyWeapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Weapon Found"))
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Weapon Notttt Found"))
+	}
+
 }
 
+
+void AEnemyAIController::DelayedInitialisation()
+{
+	
+	ACharacter* EnemyCharacter = Cast<ACharacter>(GetPawn()); // Get the character
+	TArray<AActor*> AttachedComponents;
+	EnemyCharacter->GetAttachedActors(AttachedComponents); // Get the attached components
+
+	UE_LOG(LogTemp, Warning, TEXT("Attached Components: %d"), AttachedComponents.Num())
+
+
+		for (AActor* Component : AttachedComponents)
+		{
+			AEnemyWeapon* Weapon = Cast<AEnemyWeapon>(Component);
+
+			if (Weapon)
+			{
+
+				Weapon->SetOwner(EnemyCharacter); // Set the owner
+				Weapon->NewDamage = Damage; // Set the damage
+				EnemyWeapon = Weapon; // Set the weapon
+
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Weapon Not Found"))
+			}
+
+		}
+
+}
 
 void AEnemyAIController::MoveToPlayer()
 {
