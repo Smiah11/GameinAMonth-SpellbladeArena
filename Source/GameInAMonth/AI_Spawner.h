@@ -21,7 +21,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Spawning")
 	TArray<TSubclassOf<ATrainingDummy>> EnemiesToSpawn; //array to hold the different enemies that can be spawned
 
-	UPROPERTY(EditAnywhere, Category = "Spawning")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Spawning")
 	float BaseDamage = 10.f; // base damage of the enemy weapon
 
 	UPROPERTY(EditAnywhere, Category = "Spawning")

@@ -32,7 +32,7 @@ public:
 	UStaticMeshComponent* SwordMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties")
-	float BaseDamage = 10.f;
+	float BaseDamage = 20.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties")
 	float NewDamage;

@@ -51,6 +51,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Spawning")
 	AAI_Spawner* Spawner; // reference to the spawner that spawned this enemy 
 
+	UPROPERTY(EditAnywhere, Category = "Spawning")
+	bool bIsDead = false;
+
 
 private:
 
@@ -58,6 +61,6 @@ private:
 
 	void HandleDeath();
 
-	bool bIsDead = false;
+	
 
 };

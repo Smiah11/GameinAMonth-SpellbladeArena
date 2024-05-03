@@ -4,6 +4,7 @@
 #include "TrainingDummy.h"
 #include "AI_Spawner.h"
 #include "EnemyAIController.h"
+#include "GameInAMonthGameMode.h"
 
 // Sets default values
 ATrainingDummy::ATrainingDummy()
@@ -29,7 +30,7 @@ void ATrainingDummy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	UE_LOG(LogTemp, Warning, TEXT("Enemy Health: %f"), Health);
+	//UE_LOG(LogTemp, Warning, TEXT("Enemy Health: %f"), Health);
 
 }
 
@@ -53,7 +54,7 @@ float ATrainingDummy::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 
 	//UAnimMontage* Montage1 = UAnimMontage::CreateSlotAnimationAsDynamicMontage(HitAnim, "DefaultSlot"); // Create a dynamic montage from the hit animation (Not needed)
 
-	//UE_LOG(LogTemp, Warning, TEXT("Enemy Health: %f"), Health);
+	UE_LOG(LogTemp, Warning, TEXT("Enemy Health: %f"), Health);
 
 
 	// clamp the health
@@ -81,7 +82,15 @@ float ATrainingDummy::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 
 void ATrainingDummy::HandleDeath()
 {
+
+	AGameInAMonthGameMode* GameMode = Cast<AGameInAMonthGameMode>(GetWorld()->GetAuthGameMode());
+	if (GameMode)
+	{
+		GameMode->GameWin();
+	}
+
 	Destroy();
+
 	if (Spawner)
 	{
 		Spawner->OnEnemyDeath(); // Notify the spawner that this enemy has died so it can spawn a new one after 5 seconds

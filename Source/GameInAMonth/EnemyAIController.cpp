@@ -90,6 +90,9 @@ void AEnemyAIController::BeginPlay()
 void AEnemyAIController::DelayedInitialisation()
 {
 	
+
+	// 2 DAYS Later... just realised I should've set this up in the character class instead of the controller :(
+
 	ACharacter* EnemyCharacter = Cast<ACharacter>(GetPawn()); // Get the character
 	TArray<AActor*> AttachedComponents;
 	EnemyCharacter->GetAttachedActors(AttachedComponents); // Get the attached components

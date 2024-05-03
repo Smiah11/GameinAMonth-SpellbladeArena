@@ -81,6 +81,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* BlockAction;
 
+	/** Pause Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* PauseAction;
 
 	// Mage Mode Input Action
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -159,6 +162,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetWeaponCollisionEnabled(ECollisionEnabled::Type CollisionEnabled); // Set the weapon collision enabled
 
+	bool bIsDead = false; // If the player is dead
+
+	void ResetPlayer(); // Reset the player stats for next level
+
 protected:
 
 	/** Called for movement input */
@@ -173,7 +180,7 @@ protected:
 
 	void ResetDodgeCooldown(); // Reset the dodge cooldown
 
-	void ResetPlayer(); // Reset the player stats for next level
+
 
 	void ApplyPowerup(); // Apply powerup to the player
 
@@ -231,6 +238,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Abilities", meta = (AllowPrivateAccess = "true"))
 	bool bIsAbilityReady = false; // If the player can use the ability
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivate = "true"))
+	float BaseDamage =10.f; // Base damage for the ability
+
 
 	void ExecuteTeleport(); // Execute the teleport ability
 
@@ -243,14 +253,16 @@ protected:
 
 
 	// Attached swords on the player
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	TArray<AMainSword*> AttachedSwords; // Sword class // MAY NEED TO REMOVE TO FIX THE DOUBLE ATTACK BUG
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	TArray<AMainSword*> AttachedSwords; // Sword class
 
 	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Abilities", meta = (AllowPrivateAccess = "true"))
 	//TEnumAsByte<EAbilityType>CurrentAbilityType;
 
 
 	void ToggleMageMode(); // Toggle the mage mode
+
+
 	
 
 protected:
@@ -284,7 +296,6 @@ private:
 	float ComboResetTime = 2.f; // Time to reset the combo counter
 	FTimerHandle ComboResetTimer; // Timer to reset the combo counter
 	float AttackStaminaCost = 5.f; // Stamina cost for attacking
-	float BaseDamage;
 	float DamageMultiplier = 1.f; // Damage multiplier
 	float AttackCooldown = 0.8f; // Attack cooldown
 	float LastAttackTime = 0.f; // Last attack time
@@ -309,6 +320,8 @@ private:
 	FTimerHandle MageModeCooldownTimer; // Timer to cooldown the mage mode
 	FTimerHandle RegenManaTimer; // Timer to regen the mana will only use when not in mage mode
 
+
+	FTimerHandle DeathTimer;
 
 
 
@@ -343,5 +356,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivate))
 	UAnimSequence* TransitionAnim; // UnBlock Montage
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations", meta = (AllowPrivate))
+	UAnimMontage* DeathAnimation; // Block Montage
 };
 

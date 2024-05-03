@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "GameInAMonthCharacter.h"
+#include "GameInAMonthGameMode.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -104,20 +105,17 @@ void AGameInAMonthCharacter::Tick(float DeltaTime)
 		// If the player has enough stamina, they can attack set to 5
 		//bCanAttack = true;
 
-		if (CurrentStamina >= DodgeStaminaCost)
+		if (CurrentStamina < DodgeStaminaCost)
 		{
-			// If the player has enough stamina, they can dodge
-			bCanDodge = true;
+			// If the player does not have enough stamina to dodge, they can't dodge
+			bCanDodge = false;
 		}
 	
 	if (bIsMageModeActive)
 	{
-		// If the player is in mage mode, they can't attack
-		
 
-		//UE_LOG(LogTemplateCharacter, Log, TEXT("CurrentMana: %f"), CurrentMana);
 
-		if (CurrentMana < 20)
+		if (CurrentMana < 20.f) // If the player does not have enough mana to use an ability
 		{
 			bIsAbilityReady = false;
 
@@ -166,7 +164,7 @@ void AGameInAMonthCharacter::BeginPlay()
 
 			// set the properties that i want
 			AttackCooldown = Sword->AttackSpeed;
-			BaseDamage = Sword->NewDamage;
+			Sword->NewDamage = BaseDamage;
 
 
 		}
@@ -214,6 +212,8 @@ void AGameInAMonthCharacter::ToggleMageMode()
 		GetMesh()->SetOverlayMaterial(bIsMageModeActive ? AuraMaterial : WarriorMaterial); // Set the material overlay
 
 		//AuraParticlesComponent->SetVisibility(bIsMageModeActive);
+
+		EnableMageWidget();// Enable the mage widget
 		
 		if (bIsMageModeActive) // If the player is in mage mode, activate the particles
 		{
@@ -221,7 +221,7 @@ void AGameInAMonthCharacter::ToggleMageMode()
 			WarriorAuraParticlesComponent->Deactivate();
 
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), WarriorParticles, GetActorLocation(), FRotator::ZeroRotator, FVector(1.f), true, true, ENCPoolMethod::AutoRelease, true);
-			EnableMageWidget();// Enable the mage widget
+
 		}
 		else // If the player is not in mage mode, deactivate the particles and activate the warrior particles
 		{
@@ -445,7 +445,14 @@ void AGameInAMonthCharacter::SetWeaponCollisionEnabled(ECollisionEnabled::Type C
 
 	for (AMainSword* MainSword : AttachedSwords)
 	{
-		MainSword->BoxCollision->SetCollisionEnabled(CollisionEnabled);
+		if (MainSword)
+		{
+			MainSword->BoxCollision->SetCollisionEnabled(CollisionEnabled);
+		}
+		else
+		{
+			return;
+		}
 	}
 
 }
@@ -503,6 +510,10 @@ void AGameInAMonthCharacter::Look(const FInputActionValue& Value)
 
 void AGameInAMonthCharacter::Dodge()
 {
+	if (!bCanDodge) // Check if the character can dodge
+	{
+		return;
+	}
 
 	if (bHasValidInputDirection && bCanDodge)
 	{
@@ -542,12 +553,24 @@ void AGameInAMonthCharacter::HandleDamage(float Damage)
 	CurrentHealth -= Damage; // Subtract the damage from the health
 	if (CurrentHealth <= 0) // Check if the health is less than or equal to 0
 	{
-		HandleDeath(); // Call the death function issue with damage being applied due to weapon not ignoring/////////////////////
+		bIsDead = true; // Set the flag to true
+		PlayAnimMontage(DeathAnimation); // Play the death montage
+
+		//disableinput
+		GetController()->DisableInput(GetWorld()->GetFirstPlayerController()); // Disable the input
+
+		GetWorldTimerManager().SetTimer(DeathTimer, this, &AGameInAMonthCharacter::HandleDeath, 2.f, false); // Call the handle death function after the delay
 	}
 }
 
 float AGameInAMonthCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	if (bIsDead) // Check if the character is dead
+	{
+		return 0.f; // Return 0
+	}
+
+
 	if (bIsBlocking)
 	{
 		DamageAmount *= BlockDamageReduction; // Reduce the damage by the block damage reduction
@@ -820,7 +843,9 @@ void AGameInAMonthCharacter::PlayAttackAnimation()
 	}
 
 
-	float Damage = BaseDamage + ComboCounter * DamageMultiplier; // Calculate the damage
+	float DamageCritIncrease = FMath::RandRange(0.f, 12.f); // Random number between 0 and 12 for crit damage
+
+	float Damage = (BaseDamage + ComboCounter + DamageCritIncrease) * DamageMultiplier; // Calculate the damage
 
 	for (AMainSword* Sword : AttachedSwords)
 	{
@@ -850,8 +875,10 @@ void AGameInAMonthCharacter::ApplyPowerup()
 void AGameInAMonthCharacter::HandleDeath()
 {
 	// Handle the death of the character
-	// For now, we will just reset the player
 
+	AGameInAMonthGameMode* GameMode = Cast<AGameInAMonthGameMode>(GetWorld()->GetAuthGameMode());
+
+	GameMode->GameLose(); // Call the game lose function in the game mode
 
 	Destroy();
 }

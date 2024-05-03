@@ -41,6 +41,8 @@ AMainSword::AMainSword()
 
 	NewDamage = BaseDamage;
 
+	UE_LOG(LogTemp, Warning, TEXT("Damage Set :%f"), NewDamage);
+
 }
 
 // Called when the game starts or when spawned
@@ -125,6 +127,8 @@ void AMainSword::OnSwordOverlap(UPrimitiveComponent* HitComponent, AActor* Other
 
 		// Apply damage to the actor
 		UGameplayStatics::ApplyDamage(OtherActor, NewDamage, OwnerController, this, UDamageType::StaticClass());
+
+		UE_LOG(LogTemp, Warning, TEXT("Enemy Hit %f"), NewDamage);
 
 		bCanDamage = false;
 
