@@ -3,6 +3,7 @@
 
 #include "AI_Spawner.h"
 #include "EnemyAIController.h"
+#include "TrainingDummy.h"
 
 // Sets default values
 AAI_Spawner::AAI_Spawner()
@@ -57,9 +58,13 @@ void AAI_Spawner::SpawnEnemy()
 
 	if (SpawnedEnemy)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Updating Values"));
 		CurrentEnemy = SpawnedEnemy; // Set the current enemy
 
-		CurrentEnemy->MaxHealth = BaseHealth; // Set the health for the enemy
+		SpawnedEnemy->Spawner = this; // Set the spawner for the enemy so we can call the OnEnemyDeath function
+
+		CurrentEnemy->Health = BaseHealth; // Set the health for the enemy
+		CurrentEnemy->MaxHealth = BaseHealth; // Set the max health for the enemy
 		BaseHealth += HealthIncrement; // Increase the health for the next enemy
 
 		
@@ -77,5 +82,11 @@ void AAI_Spawner::SpawnEnemy()
 	}
 
 
+}
+
+void AAI_Spawner::OnEnemyDeath()
+{
+	// Set a timer to spawn the next enemy, this function will be called in either the gamemode or the enemy class when the enemy dies, Note to self (probably enemy class would be better )
+	GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &AAI_Spawner::SpawnEnemy, SpawnDelay, false);
 }
 

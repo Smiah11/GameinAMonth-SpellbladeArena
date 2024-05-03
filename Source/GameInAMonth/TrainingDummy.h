@@ -4,8 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "AI_Spawner.h"
 #include "TrainingDummy.generated.h"
 
+
+
+
+/// <summary>
+/// NOTE: This class was originally going to be a training dummy, however it was later decided to be a generic enemy class because it became a solid base for the enemy
+/// </summary>
 UCLASS()
 class GAMEINAMONTH_API ATrainingDummy : public ACharacter
 {
@@ -38,11 +45,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Properties)
 	float MaxHealth = 100.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* DeathAnim;
+
+	UPROPERTY(EditAnywhere, Category = "Spawning")
+	AAI_Spawner* Spawner; // reference to the spawner that spawned this enemy 
+
 
 private:
 
-
+	FTimerHandle HandleDeathTimer;
 
 	void HandleDeath();
+
+	bool bIsDead = false;
 
 };

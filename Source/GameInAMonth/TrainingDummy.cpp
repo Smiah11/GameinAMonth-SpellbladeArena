@@ -2,6 +2,7 @@
 
 
 #include "TrainingDummy.h"
+#include "AI_Spawner.h"
 #include "EnemyAIController.h"
 
 // Sets default values
@@ -9,6 +10,8 @@ ATrainingDummy::ATrainingDummy()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	
 
 }
 
@@ -26,6 +29,8 @@ void ATrainingDummy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	UE_LOG(LogTemp, Warning, TEXT("Enemy Health: %f"), Health);
+
 }
 
 // Called to bind functionality to input
@@ -37,23 +42,38 @@ void ATrainingDummy::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 float ATrainingDummy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+
+	if (bIsDead) return 0.f; // If the enemy is already dead, don't take any more damage
+
+	AEnemyAIController* AIController = Cast<AEnemyAIController>(GetController());
+
 	float DamageApplied = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
-	Health -= DamageApplied;
+	Health -= DamageApplied; // Subtract the damage from the health
 
-	UAnimMontage* Montage1 = UAnimMontage::CreateSlotAnimationAsDynamicMontage(HitAnim, "DefaultSlot");
+	//UAnimMontage* Montage1 = UAnimMontage::CreateSlotAnimationAsDynamicMontage(HitAnim, "DefaultSlot"); // Create a dynamic montage from the hit animation (Not needed)
 
-	UE_LOG(LogTemp, Warning, TEXT("Health: %f"), Health);
+	//UE_LOG(LogTemp, Warning, TEXT("Enemy Health: %f"), Health);
+
+
+	// clamp the health
+	Health = FMath::Clamp(Health, 0.f, MaxHealth);
+
 
 
 	if (DamageApplied > 0)
 	{
-		Cast<AEnemyAIController>(GetController())->NotifyDamageTaken();
+		AIController->NotifyDamageTaken(); // Notify the AI controller that the enemy has taken damage
 	}
 
 	if (Health <= 0)
 	{
-		HandleDeath();
+		bIsDead = true;
+		//AIController->bCanAttack = false;
+		AIController->UnPossess(); // Unpossess the AI controller so it stops attacking and running the behaviour tree
+		PlayAnimMontage(DeathAnim);
+		GetWorldTimerManager().SetTimer(HandleDeathTimer, this, &ATrainingDummy::HandleDeath, 2.f, false); // Set the timer to the length of the death animation
+		UE_LOG(LogTemp, Warning, TEXT("Enemy Died"));
 	}
 
 	return DamageApplied;
@@ -61,6 +81,12 @@ float ATrainingDummy::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 
 void ATrainingDummy::HandleDeath()
 {
-		Destroy();
+	Destroy();
+	if (Spawner)
+	{
+		Spawner->OnEnemyDeath(); // Notify the spawner that this enemy has died so it can spawn a new one after 5 seconds
+	}
+
+
 }
 
