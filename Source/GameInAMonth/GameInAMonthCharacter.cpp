@@ -868,6 +868,15 @@ void AGameInAMonthCharacter::ResetPlayer()
 
 }
 
+void AGameInAMonthCharacter::PlaySound(USoundCue* Sound)
+{
+	if (Sound)
+	{
+		MusicComponent->SetSound(Sound); // Set the sound
+		MusicComponent->Play(); // Play the sound
+	}
+}
+
 void AGameInAMonthCharacter::ApplyPowerup()
 {
 }

@@ -7,7 +7,9 @@
 #include "Logging/LogMacros.h"
 #include "MainSword.h"
 #include "NiagaraComponent.h"
+#include "Components/AudioComponent.h"
 #include "NiagaraSystem.h"
+
 #include "GameInAMonthCharacter.generated.h"
 
 class USpringArmComponent;
@@ -168,6 +170,17 @@ public:
 	bool bIsDead = false; // If the player is dead
 
 	void ResetPlayer(); // Reset the player stats for next level
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivate = "true"))
+	UAudioComponent* MusicComponent; // Audio component for the player
+
+	UFUNCTION(BlueprintCallable, Category = "Sound")
+	void PlaySound(USoundCue* Sound); // Play sound function
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivate = "true"))
+	USoundCue* BackgroundSound;
+
 
 protected:
 
