@@ -123,7 +123,7 @@ void AMainSword::OnSwordOverlap(UPrimitiveComponent* HitComponent, AActor* Other
 	FHitResult BoxHit;
 
 		// Box Trace for debugging
-		UKismetSystemLibrary::BoxTraceSingle(GetWorld(), Start, End, FVector(5, 5, 5), TraceStart->GetComponentRotation(), ETraceTypeQuery::TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, BoxHit, true);
+		//UKismetSystemLibrary::BoxTraceSingle(GetWorld(), Start, End, FVector(5, 5, 5), TraceStart->GetComponentRotation(), ETraceTypeQuery::TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::ForDuration, BoxHit, true);
 
 		// Apply damage to the actor
 		UGameplayStatics::ApplyDamage(OtherActor, NewDamage, OwnerController, this, UDamageType::StaticClass());

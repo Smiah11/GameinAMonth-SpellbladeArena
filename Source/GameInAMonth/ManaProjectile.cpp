@@ -62,7 +62,7 @@ void AManaProjectile::OnBeginOverlap(UPrimitiveComponent* HitComp, AActor* Other
 
 	AGameInAMonthCharacter* Player = Cast<AGameInAMonthCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 
-	ProjectileDamage = Player->BaseDamage;
+	ProjectileDamage = Player->BaseDamage + FMath::RandRange(10.f,50.f);
 	
 	if (OtherActor->ActorHasTag("Enemy")) // Check if the actor has the tag "Enemy"
 	{
