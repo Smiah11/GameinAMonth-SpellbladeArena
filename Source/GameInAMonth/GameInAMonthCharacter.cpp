@@ -873,6 +873,8 @@ void AGameInAMonthCharacter::ResetPlayer()
 
 }
 
+
+/*
 void AGameInAMonthCharacter::PlaySound(USoundCue* Sound)
 {
 	if (Sound)
@@ -881,6 +883,7 @@ void AGameInAMonthCharacter::PlaySound(USoundCue* Sound)
 		MusicComponent->Play(); // Play the sound
 	}
 }
+*/
 
 void AGameInAMonthCharacter::ApplyPowerup()
 {

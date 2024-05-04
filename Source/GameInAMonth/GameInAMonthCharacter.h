@@ -181,8 +181,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivate = "true"))
 	UAudioComponent* MusicComponent; // Audio component for the player
 
-	UFUNCTION(BlueprintCallable, Category = "Sound")
-	void PlaySound(USoundCue* Sound); // Play sound function
+	//UFUNCTION(BlueprintCallable, Category = "Sound")
+	//void PlaySound(USoundCue* Sound); // Play sound function
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivate = "true"))
 	USoundCue* BackgroundSound;
@@ -327,7 +327,7 @@ private:
 	bool bIsBlocking = false; // If the player is blocking
 	float BlockStaminaCost = 5.f;
 	float BlockStaminaDrainRate = 10.f; // Stamina drain rate while blocking needs to be double of the stamin regen to make it effective
-	float BlockDamageReduction = 0.5f; // Damage reduction while blocking
+	float BlockDamageReduction = 0.1f; // Damage reduction while blocking
 	FTimerHandle StaminaDrainTimer; // Timer to drain the stamina while blocking
 	FTimerHandle RegenStaminaTimer;
 

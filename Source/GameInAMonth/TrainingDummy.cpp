@@ -4,6 +4,7 @@
 #include "TrainingDummy.h"
 #include "AI_Spawner.h"
 #include "EnemyAIController.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameInAMonthGameMode.h"
 
 // Sets default values
@@ -22,6 +23,10 @@ void ATrainingDummy::BeginPlay()
 	Super::BeginPlay();
 
 	Health = MaxHealth;
+
+	GetCharacterMovement()->MaxWalkSpeed = FMath::RandRange(250.f,600.f);
+
+
 	
 }
 
