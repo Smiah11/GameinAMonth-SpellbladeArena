@@ -187,6 +187,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivate = "true"))
 	USoundCue* BackgroundSound;
 
+	// Switch Sound
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivate = "true"))
+	USoundBase* SwitchSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivate = "true"))
+	USoundCue* DeathCue;
+
 
 protected:
 

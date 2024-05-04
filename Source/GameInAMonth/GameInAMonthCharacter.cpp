@@ -15,6 +15,7 @@
 #include "GameFramework/Character.h"
 #include "MainSword.h"
 #include <NiagaraFunctionLibrary.h>
+#include <Kismet/GameplayStatics.h>
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -198,6 +199,9 @@ void AGameInAMonthCharacter::ToggleMageMode()
 			PlayAnimMontage(TransitionMontage);
 		}
 		
+		// Play Sound
+		UGameplayStatics::PlaySound2D(GetWorld(), SwitchSound);
+
 
 	
 		bCanAttack = bIsMageModeActive ? false : true; // If the player is in mage mode, they can't attack
@@ -555,6 +559,8 @@ void AGameInAMonthCharacter::HandleDamage(float Damage)
 	{
 		bIsDead = true; // Set the flag to true
 		PlayAnimMontage(DeathAnimation); // Play the death montage
+
+		UGameplayStatics::PlaySound2D(GetWorld(), DeathCue); // Play the death sound
 
 		//disableinput
 		GetController()->DisableInput(GetWorld()->GetFirstPlayerController()); // Disable the input

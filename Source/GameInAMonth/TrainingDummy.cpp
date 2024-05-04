@@ -6,6 +6,7 @@
 #include "EnemyAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameInAMonthGameMode.h"
+#include <Kismet/GameplayStatics.h>
 
 // Sets default values
 ATrainingDummy::ATrainingDummy()
@@ -77,7 +78,8 @@ float ATrainingDummy::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 		bIsDead = true;
 		//AIController->bCanAttack = false;
 		AIController->UnPossess(); // Unpossess the AI controller so it stops attacking and running the behaviour tree
-		PlayAnimMontage(DeathAnim);
+		PlayAnimMontage(DeathAnim); // Play the death animation
+		UGameplayStatics::PlaySound2D(GetWorld(), DeathCue); // Play the death sound
 		GetWorldTimerManager().SetTimer(HandleDeathTimer, this, &ATrainingDummy::HandleDeath, 2.f, false); // Set the timer to the length of the death animation
 		UE_LOG(LogTemp, Warning, TEXT("Enemy Died"));
 	}

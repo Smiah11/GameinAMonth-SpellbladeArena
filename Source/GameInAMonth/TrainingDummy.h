@@ -55,6 +55,9 @@ public:
 	bool bIsDead = false;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Properties")
+	USoundCue* DeathCue;
+
 private:
 
 	FTimerHandle HandleDeathTimer;
