@@ -153,7 +153,10 @@ public:
 	UNiagaraSystem* WarriorParticles; // particles for the player	
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void EnableMageWidget();
+	void EnableMageWidget(); // Enable the mage widget for the player 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivate = "true"))
+	float BaseDamage = 10.f; // Base damage for the ability
 
 public:
 	AGameInAMonthCharacter();
@@ -238,8 +241,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Abilities", meta = (AllowPrivateAccess = "true"))
 	bool bIsAbilityReady = false; // If the player can use the ability
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivate = "true"))
-	float BaseDamage =10.f; // Base damage for the ability
+
 
 
 	void ExecuteTeleport(); // Execute the teleport ability

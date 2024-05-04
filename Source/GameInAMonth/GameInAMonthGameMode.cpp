@@ -19,8 +19,6 @@ AGameInAMonthGameMode::AGameInAMonthGameMode()
 void AGameInAMonthGameMode::GameWin()
 {
 
-
-
 	// check if the enemy is dead and reset the player  - this function will be called in the spawner
 	AGameInAMonthCharacter* Player = Cast<AGameInAMonthCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	Player->ResetPlayer();

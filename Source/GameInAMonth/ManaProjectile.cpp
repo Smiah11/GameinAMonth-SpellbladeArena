@@ -4,6 +4,7 @@
 #include "ManaProjectile.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "GameInAMonthCharacter.h"
 #include <Kismet/GameplayStatics.h>
 
 // Sets default values
@@ -58,6 +59,10 @@ void AManaProjectile::Tick(float DeltaTime)
 
 void AManaProjectile::OnBeginOverlap(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+
+	AGameInAMonthCharacter* Player = Cast<AGameInAMonthCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+
+	ProjectileDamage = Player->BaseDamage;
 	
 	if (OtherActor->ActorHasTag("Enemy")) // Check if the actor has the tag "Enemy"
 	{
