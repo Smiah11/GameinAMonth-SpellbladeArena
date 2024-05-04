@@ -171,6 +171,12 @@ public:
 
 	void ResetPlayer(); // Reset the player stats for next level
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivate = "true"))
+	float DamageReduction = 0.f; // Damage reduction for the player will go up by 2.5%
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivate = "true"))
+	bool bHasDamageReduction = false; // If the player has damage reduction 
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities", meta = (AllowPrivate = "true"))
 	UAudioComponent* MusicComponent; // Audio component for the player

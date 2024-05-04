@@ -576,6 +576,11 @@ float AGameInAMonthCharacter::TakeDamage(float DamageAmount, FDamageEvent const&
 		DamageAmount *= BlockDamageReduction; // Reduce the damage by the block damage reduction
 	}
 
+	if (bHasDamageReduction)
+	{
+		DamageAmount *= (1 - DamageReduction); // Reduce the damage by the damage reduction as a percentage
+	}
+
 	// ignore if its characters weapon
 	if (DamageCauser == this)
 	{
