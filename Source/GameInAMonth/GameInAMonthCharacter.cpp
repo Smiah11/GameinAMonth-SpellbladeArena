@@ -565,7 +565,7 @@ void AGameInAMonthCharacter::HandleDamage(float Damage)
 		UGameplayStatics::PlaySound2D(GetWorld(), DeathCue); // Play the death sound
 
 		//disableinput
-		GetController()->DisableInput(GetWorld()->GetFirstPlayerController()); // Disable the input
+		DisableInput(GetWorld()->GetFirstPlayerController()); 
 
 		GetWorldTimerManager().SetTimer(DeathTimer, this, &AGameInAMonthCharacter::HandleDeath, 2.f, false); // Call the handle death function after the delay
 	}
@@ -902,7 +902,6 @@ void AGameInAMonthCharacter::HandleDeath()
 	// Handle the death of the character
 
 	AGameInAMonthGameMode* GameMode = Cast<AGameInAMonthGameMode>(GetWorld()->GetAuthGameMode());
-
 	GameMode->GameLose(); // Call the game lose function in the game mode
 
 	Destroy();
