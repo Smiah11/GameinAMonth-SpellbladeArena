@@ -23,11 +23,15 @@
 			]
 		},
 		{
-			"Name": "MotionWarping",
+			"Name": "StateTree",
 			"Enabled": true
 		},
 		{
-			"Name": "StateTree",
+			"Name": "MotionTrajectory",
+			"Enabled": true
+		},
+		{
+			"Name": "PoseSearch",
 			"Enabled": true
 		}
 	]
