@@ -223,6 +223,7 @@ void AGameInAMonthCharacter::ToggleMageMode()
 		{
 			AuraParticlesComponent->Activate();
 			WarriorAuraParticlesComponent->Deactivate();
+			StaminaRegenRate = 8.f; // Set the stamina regen rate to 8
 
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), WarriorParticles, GetActorLocation(), FRotator::ZeroRotator, FVector(1.f), true, true, ENCPoolMethod::AutoRelease, true);
 
@@ -231,6 +232,7 @@ void AGameInAMonthCharacter::ToggleMageMode()
 		{
 			AuraParticlesComponent->Deactivate();
 			WarriorAuraParticlesComponent->Activate();
+			StaminaRegenRate = 4.f; // Set the stamina regen rate back to normal
 
 			UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), MageParticles, GetActorLocation(), FRotator::ZeroRotator, FVector(1.f), true, true, ENCPoolMethod::AutoRelease, true);
 		}
@@ -719,7 +721,7 @@ void AGameInAMonthCharacter::DrainStamina()
 void AGameInAMonthCharacter::RegenStamina()
 {
 
-	CurrentStamina += 2; // Regen by 2
+	CurrentStamina += StaminaRegenRate; // Regen by 2
 	CurrentStamina = FMath::Clamp(CurrentStamina, 0, MaxStamina); // Clamp the stamina
 	UE_LOG(LogTemp, Warning, TEXT("Stamina: %f"), CurrentStamina)
 

@@ -335,6 +335,7 @@ private:
 	float BlockStaminaCost = 5.f;
 	float BlockStaminaDrainRate = 10.f; // Stamina drain rate while blocking needs to be double of the stamin regen to make it effective
 	float BlockDamageReduction = 0.1f; // Damage reduction while blocking
+	float StaminaRegenRate = 4.f;
 	FTimerHandle StaminaDrainTimer; // Timer to drain the stamina while blocking
 	FTimerHandle RegenStaminaTimer;
 

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "AI_Spawner.h"
+#include "Sound/SoundCue.h"
 #include "TrainingDummy.generated.h"
 
 
